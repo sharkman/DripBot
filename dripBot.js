@@ -1,8 +1,152 @@
 $dripBot = (function($) {
+
+	var version = '0.1'
+
+	var showBangForBuck = function () {
+		localStats.powerUps.slice(0).sort(function (a, b) {
+			return a.currentPrice / a.currentBps - b.currentPrice / b.currentBps;
+		}).forEach(function (powerUp) {
+			console.log(powerUp.name + " " + powerUp.currentBps / powerUp.currentPrice + " bps per byte (" + powerUp.currentBps + " bps currently)")
+		})
+	}
+
+	var buyPowerup = function(name) {
+		$(powerups[name]).click();
+	}
+
+	var autoBuyTopThing = function() {
+		var topPowerup = (localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; })[0]); 
+		if (topPowerup.available) { 
+			buyPowerup(topPowerup.name);
+		}
+	}
+
+	var powerups = {}
+	var i = 1;
+	localStats.powerUps.forEach(function(pu) { powerups[pu.name] = '#pu' + i++; });
 	
-	
+	var timeOfChange = 0;
+	var protectLead = function() { 
+		var leaderName = $('div#leaderBoard table tbody').children('tr').first().children('td').eq(1).text();
+		if (leaderName != networkUser.userName) {
+			if (protectLeadPid == -1) {
+				timeOfChange = $.now();
+				console.log("As of " + $.now() + " there is one fairer in the land... it is " + leaderName)
+				$('#btn-addGlobalMem').click();
+				protectLeadPid = setInterval( function() { $('#btn-addGlobalMem').click()}, 9500);
+			}
 
+		} else {
+			if (protectLeadPid != -1) {
+				var diffTime = $.time
+				console.log("as of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover)")
+				clearInterval(protectLeadPid);
+				protectLeadPid = -1;
+			}
+		}
+	}
 
+	var protectLeadStart = function() {
+		protectLeadPid = setInterval( function() { protectLead() }, 1000);
+	}
 
+	var clickButton = $('a#btn-addMem')
+	var clickCup = function() {
+		clickButton.click();
+	}
 
+	var dripButton = $('button#btn-addGlobalMem')
+	var drip = function() {
+		dripButton.click();
+	}
+
+	var getBytes = function() {
+		return localStats.byteCount;
+	}
+
+	var getCapacity = function() {
+		return localStats.memoryCapacity;
+	}
+
+	var buyUpgrade = function(num) {
+		// Not thread safe!  If someone else uses the bytes we'll never know.
+		var upgrade = $('#upg' + num);
+		var price = parseInt(upgrade.children('.upgprice').first().text().split(' ')[0]);
+		if(upgrade && getBytes() >= price) {
+			upgrade.click();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	var boughtOthers = false;
+	var boughtLeaderboard = false;
+	var traverseStory = function() {
+
+		if(story.state == 6) {
+			drip();
+		}
+
+		if(story.state == 9) {
+			buyPowerup('Cursor');
+		}
+
+		if(story.state == 11) {
+			$('#upg1').click();
+		}
+
+		if(story.state == 12) {
+			if(! boughtOthers) {
+				if(buyUpgrade(1)) {
+					boughtOthers = true;
+					$('input.vex-dialog-button-primary').click();
+				}
+
+			} else if(! boughtLeaderboard) {
+				if(buyUpgrade(1)) {
+					boughtLeaderboard = true;
+				}
+			} else {
+				clearInterval(storyPid);
+				console.log("Please sign in to continue.");
+			}
+		}
+
+		if(story.state != 12 && getBytes() == getCapacity()) {
+			drip();
+		}
+	}
+
+	var storyPid = -1;
+	var clickerPid = -1;
+	function init() {
+		document.hasFocus = function() { return true; };
+		AnonymousUserManager.canDrip = function() { return true; };
+
+		console.log('Starting DripBot v' + version + '!');
+		clickCup();
+		storyPid = setInterval(function() { traverseStory(); }, 100);
+		clickerPid = setInterval(function() { clickCup(); }, 30);
+	}
+
+	return {
+		powerups: powerups,
+		showBangForBuck: showBangForBuck,
+		buyPowerup: buyPowerup,
+		buyUpgrade: buyUpgrade,
+		autoBuyTopThing: autoBuyTopThing,
+		protectLeadPid: -1,
+		protectLead: protectLead,
+		protectLeadStart: protectLeadStart,
+		protectLeadPid: -1,
+		traverseStory: traverseStory,
+		click: clickCup,
+		drip: drip,
+		getBytes: getBytes,
+		getCapacity: getCapacity,
+		init: init
+	}
 }($));
+
+$dripBot.init();
