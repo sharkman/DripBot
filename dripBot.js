@@ -18,6 +18,12 @@ $dripBot = (function($) {
 		var topPowerup = (localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; })[0]); 
 		if (topPowerup.available) { 
 			buyPowerup(topPowerup.name);
+		} else {
+			if(getCapacity() < topPowerup.currentPrice) {
+				if((getBytes() + getCapacity()) > topPowerup.currentPrice || atMaxBytes()) {
+					drip();
+				}
+			}
 		}
 	}
 
@@ -68,6 +74,10 @@ $dripBot = (function($) {
 		return localStats.memoryCapacity;
 	}
 
+	var atMaxBytes = function() {
+		return getBytes() == getCapacity();
+	}
+
 	var buyUpgrade = function(num) {
 		// Not thread safe!  If someone else uses the bytes we'll never know.
 		var upgrade = $('#upg' + num);
@@ -109,26 +119,35 @@ $dripBot = (function($) {
 				}
 			} else {
 				clearInterval(storyPid);
+				autoBuyTopThingPid = setInterval(function() { autoBuyTopThing(); }, 500);
 				console.log("Please sign in to continue.");
 			}
 		}
 
-		if(story.state != 12 && getBytes() == getCapacity()) {
+		if(story.state != 12 && atMaxBytes()) {
 			drip();
 		}
 	}
 
 	var storyPid = -1;
 	var clickerPid = -1;
-	function init() {
-		document.hasFocus = function() { return true; };
-		AnonymousUserManager.canDrip = function() { return true; };
-
+	var autoBuyTopThingPid = -1;
+	function start() {
 		console.log('Starting DripBot v' + version + '!');
-		clickCup();
-		storyPid = setInterval(function() { traverseStory(); }, 100);
+		if (story.state != 0) {
+			console.log("Starting story.")
+			storyPid = setInterval(function() { traverseStory(); }, 100);
+		} else {
+			console.log("Resuming.")
+			autoBuyTopThingPid = setInterval(function() { autoBuyTopThing(); }, 500);
+		}
 		clickerPid = setInterval(function() { clickCup(); }, 30);
 	}
+
+	document.hasFocus = function() { return true; };
+	AnonymousUserManager.canDrip = function() { return true; };
+	clickCup();
+	setTimeout(function() { start(); }, 500);
 
 	return {
 		powerups: powerups,
@@ -145,8 +164,7 @@ $dripBot = (function($) {
 		drip: drip,
 		getBytes: getBytes,
 		getCapacity: getCapacity,
-		init: init
+		atMaxBytes: atMaxBytes,
+		start: start
 	}
 }($));
-
-$dripBot.init();
