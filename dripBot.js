@@ -1,0 +1,8 @@
+$dripBot = (function($) {
+	
+	
+
+
+
+
+}($));
