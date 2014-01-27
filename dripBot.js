@@ -1,6 +1,6 @@
 $dripBot = (function($) {
 
-	var version = '0.1'
+	var version = '0.1';
 
 
 	var showPowerup = function(powerup, prefix) {
@@ -17,7 +17,7 @@ $dripBot = (function($) {
 	}
 
 	var getUpgradesByBPS = function() {
-		return localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; })
+		return localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; });
 	}
 
 	var buyPowerup = function(name) {
@@ -38,7 +38,7 @@ $dripBot = (function($) {
 		}
 	}
 
-	var powerups = {}
+	var powerups = {};
 	var i = 1;
 	localStats.powerUps.forEach(function(pu) { powerups[pu.name] = '#pu' + i++; });
 	
@@ -48,15 +48,15 @@ $dripBot = (function($) {
 		if (leaderName != networkUser.userName) {
 			if (protectLeadPid == -1) {
 				timeOfChange = $.now();
-				console.log("As of " + $.now() + " there is one fairer in the land... it is " + leaderName)
+				console.log("As of " + $.now() + " there is one fairer in the land... it is " + leaderName);
 				$('#btn-addGlobalMem').click();
 				protectLeadPid = setInterval( function() { $('#btn-addGlobalMem').click()}, 9500);
 			}
 
 		} else {
 			if (protectLeadPid != -1) {
-				var diffTime = $.time
-				console.log("as of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover)")
+				var diffTime = $.time;
+				console.log("as of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover)");
 				clearInterval(protectLeadPid);
 				protectLeadPid = -1;
 			}
@@ -67,12 +67,12 @@ $dripBot = (function($) {
 		protectLeadPid = setInterval( function() { protectLead() }, 1000);
 	}
 
-	var clickButton = $('a#btn-addMem')
+	var clickButton = $('a#btn-addMem');
 	var clickCup = function() {
 		clickButton.click();
 	}
 
-	var dripButton = $('button#btn-addGlobalMem')
+	var dripButton = $('button#btn-addGlobalMem');
 	var drip = function() {
 		dripButton.click();
 	}
@@ -146,7 +146,7 @@ $dripBot = (function($) {
 	function start() {
 		console.log('Starting DripBot v' + version + '!');
 		if (story.state != 0) {
-			console.log("Starting story.")
+			console.log("Starting story.");
 			storyPid = setInterval(function() { traverseStory(); }, 100);
 		} else {
 			console.log("Resuming.")
@@ -177,5 +177,5 @@ $dripBot = (function($) {
 		getCapacity: getCapacity,
 		atMaxBytes: atMaxBytes,
 		start: start
-	}
+	};
 }($));
