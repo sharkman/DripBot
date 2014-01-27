@@ -2,12 +2,22 @@ $dripBot = (function($) {
 
 	var version = '0.1'
 
+
+	var showPowerup = function(powerup, prefix) {
+		console.log(prefix + powerup.name + " " + powerup.currentBps / powerup.currentPrice + " bps per byte (" + powerup.currentBps + " bps currently)");
+	}
 	var showBangForBuck = function () {
-		localStats.powerUps.slice(0).sort(function (a, b) {
-			return a.currentPrice / a.currentBps - b.currentPrice / b.currentBps;
-		}).forEach(function (powerUp) {
-			console.log(powerUp.name + " " + powerUp.currentBps / powerUp.currentPrice + " bps per byte (" + powerUp.currentBps + " bps currently)")
+		getUpgradesByBPS().forEach(function (powerup) {
+			showPowerup(powerup);
 		})
+	}
+
+	var showNextBuy = function() {
+		showPowerup(getUpgradesByBPS()[0], "Next purchase: ");
+	}
+
+	var getUpgradesByBPS = function() {
+		return localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; })
 	}
 
 	var buyPowerup = function(name) {
@@ -15,9 +25,10 @@ $dripBot = (function($) {
 	}
 
 	var autoBuyTopThing = function() {
-		var topPowerup = (localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; })[0]); 
+		var topPowerup = getUpgradesByBPS()[0]; 
 		if (topPowerup.available) { 
 			buyPowerup(topPowerup.name);
+			showNextBuy();
 		} else {
 			if(getCapacity() < topPowerup.currentPrice) {
 				if((getBytes() + getCapacity()) > topPowerup.currentPrice || atMaxBytes()) {
