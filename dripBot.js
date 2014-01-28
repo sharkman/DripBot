@@ -140,6 +140,23 @@ $dripBot = (function($) {
 		}
 	}
 
+	var stop = function() {
+		clearInterval(autoBuyTopThingPid);
+		clearInterval(storyPid);
+		clearInterval(clickerPid);
+	}
+
+	var init = function() {
+		document.hasFocus = function() { return true; };
+		AnonymousUserManager.canDrip = function() { return true; };
+		clickCup();
+		setTimeout(function() { start(); }, 500);
+	}
+
+	var restart = function() {
+		init();
+	}
+
 	var storyPid = -1;
 	var clickerPid = -1;
 	var autoBuyTopThingPid = -1;
@@ -154,11 +171,6 @@ $dripBot = (function($) {
 		}
 		clickerPid = setInterval(function() { clickCup(); }, 30);
 	}
-
-	document.hasFocus = function() { return true; };
-	AnonymousUserManager.canDrip = function() { return true; };
-	clickCup();
-	setTimeout(function() { start(); }, 500);
 
 	return {
 		powerups: powerups,
@@ -176,6 +188,9 @@ $dripBot = (function($) {
 		getBytes: getBytes,
 		getCapacity: getCapacity,
 		atMaxBytes: atMaxBytes,
+		stop: stop,
+		init: init,
+		restart: restart,
 		start: start
 	};
 }($));
