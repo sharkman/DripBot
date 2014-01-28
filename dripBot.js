@@ -1,14 +1,35 @@
 $dripBot = (function($) {
 
-	var version = '0.1';
-	var storyPid = -1;
-	var clickerPid = -1;
-	var autoBuyTopThingPid = -1;
-	var protectLeadPid = -1;
-	var powerups = {};
+	function OTB(o, upgrade, ordinal) {
+		if(upgrade) {
+			this.isUpgrade = true;
+			this.item = o;
+			this.bps = o.powerup.totalBps * 0.1;
+			this.ordinal = ordinal;
+			this.price = o.price;
+		} else {
+			this.isUpgrade = false;
+			this.bps = o.currentBps;
+			this.item = o;
+			this.price = o.currentPrice;
+		}
+		if(! this.item.available) {
+			this.timeToPurchase = (this.price - localStats.byteCount) / localStats.bps;
+		} else {
+			this.timeToPurchase = 0;
+		}
+	}
 
-	var clickButton = $('a#btn-addMem');
-	var dripButton = $('button#btn-addGlobalMem');
+	var version = '0.1',
+	storyPid = -1,
+	clickerPid = -1,
+	autoBuyTopThingPid = -1,
+	protectLeadPid = -1,
+	powerups = {},
+	topThing = null;
+
+	var clickButton = $('a#btn-addMem'),
+	dripButton = $('button#btn-addGlobalMem');
 
 	var showPowerup = function(powerup, prefix) {
 		console.log(prefix + powerup.name + " " + powerup.currentBps / powerup.currentPrice + " bps per byte (" + powerup.currentBps + " bps currently)");
@@ -29,6 +50,22 @@ $dripBot = (function($) {
 
 	var buyPowerup = function(name) {
 		$(powerups[name]).click();
+	}
+
+	var getOTBList = function() {
+		var i = 1;
+		var powerupsAndUpgrades = []
+		localStats.powerUps.slice(0).forEach(function(e) {
+			powerupsAndUpgrades.push(new OTB(e, false));
+			if(e.upgrades.length) {
+				e.upgrades.forEach(function(u) {
+					if((!u._purchased) && u._unlocked) {
+						powerupsAndUpgrades.push(new OTB(u, true, i++));
+					}
+				});
+			}
+		});
+		return powerupsAndUpgrades;
 	}
 
 	var autoBuyTopThing = function() {
@@ -145,7 +182,6 @@ $dripBot = (function($) {
 	}
 
 	var stop = function() {
-		console.log(autoBuyTopThingPid)
 		clearInterval(autoBuyTopThingPid);
 		clearInterval(storyPid);
 		clearInterval(clickerPid);
@@ -193,6 +229,7 @@ $dripBot = (function($) {
 		getBytes: getBytes,
 		getCapacity: getCapacity,
 		atMaxBytes: atMaxBytes,
+		getOTBList: getOTBList,
 		stop: stop,
 		init: init,
 		restart: restart,
