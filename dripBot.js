@@ -1,7 +1,14 @@
 $dripBot = (function($) {
 
 	var version = '0.1';
+	var storyPid = -1;
+	var clickerPid = -1;
+	var autoBuyTopThingPid = -1;
+	var protectLeadPid = -1;
+	var powerups = {};
 
+	var clickButton = $('a#btn-addMem');
+	var dripButton = $('button#btn-addGlobalMem');
 
 	var showPowerup = function(powerup, prefix) {
 		console.log(prefix + powerup.name + " " + powerup.currentBps / powerup.currentPrice + " bps per byte (" + powerup.currentBps + " bps currently)");
@@ -38,7 +45,6 @@ $dripBot = (function($) {
 		}
 	}
 
-	var powerups = {};
 	var i = 1;
 	localStats.powerUps.forEach(function(pu) { powerups[pu.name] = '#pu' + i++; });
 	
@@ -67,12 +73,10 @@ $dripBot = (function($) {
 		protectLeadPid = setInterval( function() { protectLead() }, 1000);
 	}
 
-	var clickButton = $('a#btn-addMem');
 	var clickCup = function() {
 		clickButton.click();
 	}
 
-	var dripButton = $('button#btn-addGlobalMem');
 	var drip = function() {
 		dripButton.click();
 	}
@@ -141,12 +145,13 @@ $dripBot = (function($) {
 	}
 
 	var stop = function() {
+		console.log(autoBuyTopThingPid)
 		clearInterval(autoBuyTopThingPid);
 		clearInterval(storyPid);
 		clearInterval(clickerPid);
-		var storyPid = -1;
-		var clickerPid = -1;
-		var autoBuyTopThingPid = -1;
+		storyPid = -1;
+		clickerPid = -1;
+		autoBuyTopThingPid = -1;
 	}
 
 	var init = function() {
@@ -160,9 +165,6 @@ $dripBot = (function($) {
 		init();
 	}
 
-	var storyPid = -1;
-	var clickerPid = -1;
-	var autoBuyTopThingPid = -1;
 	function start() {
 		console.log('Starting DripBot v' + version + '!');
 		if (story.state != 0) {
@@ -183,10 +185,8 @@ $dripBot = (function($) {
 		buyPowerup: buyPowerup,
 		buyUpgrade: buyUpgrade,
 		autoBuyTopThing: autoBuyTopThing,
-		protectLeadPid: -1,
 		protectLead: protectLead,
 		protectLeadStart: protectLeadStart,
-		protectLeadPid: -1,
 		traverseStory: traverseStory,
 		click: clickCup,
 		drip: drip,
