@@ -144,6 +144,9 @@ $dripBot = (function($) {
 		clearInterval(autoBuyTopThingPid);
 		clearInterval(storyPid);
 		clearInterval(clickerPid);
+		var storyPid = -1;
+		var clickerPid = -1;
+		var autoBuyTopThingPid = -1;
 	}
 
 	var init = function() {
@@ -171,6 +174,8 @@ $dripBot = (function($) {
 		}
 		clickerPid = setInterval(function() { clickCup(); }, 30);
 	}
+
+	init();
 
 	return {
 		powerups: powerups,
