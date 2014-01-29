@@ -1,14 +1,14 @@
 DripBot
 =======
 
-Makes dripstat fun again.  Play's the game at <http://dripstat.com/game> optimally and automatically.
+Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimally and automatically.
 
 Stages
 ------
 
 1. Traverses the story, starting the game from any point.
 2. Builds B/s as fast as possible, optimizing powerup and upgrade purchases with minimal dripping (dripping is waste).
-3. Attempts to climb to first place by dripping constantly, and optionally stops when achieved.
+3. (Not yet perfected) Attempts to climb to first place by dripping constantly, and optionally stops when achieved.
 
 
 Usage
