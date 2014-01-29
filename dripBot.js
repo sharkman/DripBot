@@ -17,7 +17,11 @@ $dripBot = (function($) {
 			this.isUpgrade = true;
 			this.item = o;
 			if(o.powerup) {
-				this.bps = o.powerup.totalBps * 0.1;
+				if(o.powerup.name == 'Cursor') {
+					this.bps = o.powerup.totalBps * 0.1 + getClickingBps() * 0.1;
+				} else {
+					this.bps = o.powerup.totalBps * 0.1;
+				}
 			}
 			this.price = o.price;
 		} else {
@@ -112,6 +116,10 @@ $dripBot = (function($) {
 
 	var protectLeadStart = function() {
 		protectLeadPid = setInterval( function() { protectLead() }, 1000);
+	}
+
+	var getClickingBps = function() {
+		return CoffeeCup.calcBytesPerClick() * 20;
 	}
 
 	var clickCup = function() {
