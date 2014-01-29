@@ -1,6 +1,6 @@
 $dripBot = (function($) {
 
-	var version = '0.1',
+	var version = '1.0',
 	stage1Pid = -1,
 	stage2Pid = -1,
 	clickerPid = -1,
