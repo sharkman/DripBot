@@ -1,11 +1,24 @@
 $dripBot = (function($) {
 
-	function OTB(o, upgrade, ordinal) {
+	var version = '0.1',
+	stage1Pid = -1,
+	stage2Pid = -1,
+	clickerPid = -1,
+	protectLeadPid = -1,
+	powerups = {},
+	topThing = null;
+
+	var clickButton = $('a#btn-addMem'),
+	dripButton = $('button#btn-addGlobalMem'),
+	modalButton = 'input.vex-dialog-button-primary';
+
+	function OTB(o, upgrade) {
 		if(upgrade) {
 			this.isUpgrade = true;
 			this.item = o;
-			this.bps = o.powerup.totalBps * 0.1;
-			this.ordinal = ordinal;
+			if(o.powerup) {
+				this.bps = o.powerup.totalBps * 0.1;
+			}
 			this.price = o.price;
 		} else {
 			this.isUpgrade = false;
@@ -20,47 +33,18 @@ $dripBot = (function($) {
 		}
 	}
 
-	var version = '0.1',
-	storyPid = -1,
-	clickerPid = -1,
-	autoBuyTopThingPid = -1,
-	protectLeadPid = -1,
-	powerups = {},
-	topThing = null;
-
-	var clickButton = $('a#btn-addMem'),
-	dripButton = $('button#btn-addGlobalMem');
-
-	var showPowerup = function(powerup, prefix) {
-		console.log(prefix + powerup.name + " " + powerup.currentBps / powerup.currentPrice + " bps per byte (" + powerup.currentBps + " bps currently)");
-	}
-	var showBangForBuck = function () {
-		getUpgradesByBPS().forEach(function (powerup) {
-			showPowerup(powerup);
-		})
-	}
-
-	var showNextBuy = function() {
-		showPowerup(getUpgradesByBPS()[0], "Next purchase: ");
-	}
-
-	var getUpgradesByBPS = function() {
-		return localStats.powerUps.slice(0).sort(function(a,b) { return a.currentPrice/a.currentBps - b.currentPrice/b.currentBps; });
-	}
-
 	var buyPowerup = function(name) {
 		$(powerups[name]).click();
 	}
 
 	var getOTBList = function() {
-		var i = 1;
 		var powerupsAndUpgrades = []
 		localStats.powerUps.slice(0).forEach(function(e) {
 			powerupsAndUpgrades.push(new OTB(e, false));
 			if(e.upgrades.length) {
 				e.upgrades.forEach(function(u) {
 					if((!u._purchased) && u._unlocked) {
-						powerupsAndUpgrades.push(new OTB(u, true, i++));
+						powerupsAndUpgrades.push(new OTB(u, true));
 					}
 				});
 			}
@@ -68,18 +52,38 @@ $dripBot = (function($) {
 		return powerupsAndUpgrades;
 	}
 
-	var autoBuyTopThing = function() {
-		var topPowerup = getUpgradesByBPS()[0]; 
-		if (topPowerup.available) { 
-			buyPowerup(topPowerup.name);
-			showNextBuy();
-		} else {
-			if(getCapacity() < topPowerup.currentPrice) {
-				if((getBytes() + getCapacity()) > topPowerup.currentPrice || atMaxBytes()) {
-					drip();
-				}
+	var sortOTBList = function(otbList) {
+		return otbList.sort(function(a,b) {
+			var sign = 1,
+			shorter,
+			longer,
+			delta;
+			if(b.timeToPurchase >= a.timeToPurchase) {
+				shorter = a;
+				longer = b;
+				sign = 1;
+			} else {
+				shorter = b;
+				longer = a;
+				sign = -1;
 			}
+			var delta = longer.timeToPurchase - shorter.timeToPurchase;
+			var newLongerPrice = longer.price + shorter.bps * delta;
+			return (shorter.price / shorter.bps - newLongerPrice / longer.bps) * sign; // Adjust based on which was shorter.
+		});
+	}
+
+	var getNewTopThing = function() {
+		topThing = null;
+		localStats.specialUpgrades.forEach(function(u) {
+			if(!u._purchased && u.available) {
+				topThing = new OTB(u, true);
+			}
+		});
+		if(topThing == null) {
+			topThing = sortOTBList(getOTBList())[0];
 		}
+		console.log("Next purchase" + (topThing.isUpgrade ? " (upgrade)" : "") + ": " + topThing.item.name);
 	}
 
 	var i = 1;
@@ -130,22 +134,49 @@ $dripBot = (function($) {
 		return getBytes() == getCapacity();
 	}
 
-	var buyUpgrade = function(num) {
-		// Not thread safe!  If someone else uses the bytes we'll never know.
-		var upgrade = $('#upg' + num);
-		var price = parseInt(upgrade.children('.upgprice').first().text().split(' ')[0]);
-		if(upgrade && getBytes() >= price) {
-			upgrade.click();
-			return true;
-		} else {
-			return false;
-		}
+	var getSortedUpgradeList = function() {
+		var upgrades = [];
+		localStats.powerUps.forEach(function(e) {
+			e.upgrades.forEach(function(u) {
+				if(u._unlocked && ! u._purchased) {
+					upgrades.push(u);
+				}
+			});
+		});
+		localStats.specialUpgrades.forEach(function(u) {
+			if(!u._purchased) {
+				upgrades.push(u);
+			}
+		});
+
+		upgrades.sort(function(a,b) {
+			return a.price - b.price;
+		});
+		return upgrades;
 	}
 
-	var boughtOthers = false;
-	var boughtLeaderboard = false;
-	var traverseStory = function() {
+	var buyUpgrade = function(name) {
+		// Not thread safe!  If someone else uses the bytes we'll never know.
+		var i = 1;
+		getSortedUpgradeList().forEach(function(u) {
+			if(u.name == name) {
+				var upgrade = $('#upg' + i);
+				upgrade.click();
 
+				for(var n=0; n<localStats.specialUpgrades.length; n++) {
+					if(localStats.specialUpgrades[n].name == name) {
+						$(modalButton).click();
+						break;
+					}
+				}
+				return true;
+			}
+			i++;
+		});
+		return false;
+	}
+
+	var stage1 = function() {
 		if(story.state == 6) {
 			drip();
 		}
@@ -155,25 +186,13 @@ $dripBot = (function($) {
 		}
 
 		if(story.state == 11) {
-			$('#upg1').click();
+			buyUpgrade('Enhanced Precision');
 		}
 
 		if(story.state == 12) {
-			if(! boughtOthers) {
-				if(buyUpgrade(1)) {
-					boughtOthers = true;
-					$('input.vex-dialog-button-primary').click();
-				}
-
-			} else if(! boughtLeaderboard) {
-				if(buyUpgrade(1)) {
-					boughtLeaderboard = true;
-				}
-			} else {
-				clearInterval(storyPid);
-				autoBuyTopThingPid = setInterval(function() { autoBuyTopThing(); }, 500);
-				console.log("Please sign in to continue.");
-			}
+			clearInterval(stage1Pid);
+			stage2Pid = setInterval(function() { stage2(); }, 500);
+			console.log("Proceeding to stage 2.");
 		}
 
 		if(story.state != 12 && atMaxBytes()) {
@@ -181,13 +200,56 @@ $dripBot = (function($) {
 		}
 	}
 
+	var stage2 = function() {
+		if(localStats.bps >= 7 * 1024 * 1024) {
+			console.log("Proceeding to stage 3.");
+			clearInterval(stage2Pid);
+		}
+
+		if(topThing == null) {
+			getNewTopThing();
+		}
+
+		if(getBytes() >= topThing.price) {
+			if(topThing.isUpgrade) {
+				buyUpgrade(topThing.item.name);
+			} else {
+				buyPowerup(topThing.item.name);
+			}
+
+			getNewTopThing();
+		} else {
+			if(getCapacity() < topThing.price) {
+				if((getBytes() + getCapacity()) >= topThing.price || atMaxBytes()) {
+					drip();
+				}
+			}
+        }
+	}
+
 	var stop = function() {
-		clearInterval(autoBuyTopThingPid);
-		clearInterval(storyPid);
+		clearInterval(stage1Pid);
+		clearInterval(stage2Pid);
 		clearInterval(clickerPid);
-		storyPid = -1;
+		stage1Pid = -1;
+		stage2Pid = -1;
 		clickerPid = -1;
-		autoBuyTopThingPid = -1;
+	}
+
+	var start = function() {
+		console.log('Starting DripBot v' + version + '!');
+		if (story.inProgress) {
+			console.log("Starting or resuming story.");
+			stage1Pid = setInterval(function() { stage1(); }, 100);
+		} else {
+			console.log("Resuming game.")
+			stage2Pid = setInterval(function() { stage2(); }, 500);
+		}
+		clickerPid = setInterval(function() { clickCup(); }, 30);
+	}
+
+	var restart = function() {
+		init();
 	}
 
 	var init = function() {
@@ -197,42 +259,28 @@ $dripBot = (function($) {
 		setTimeout(function() { start(); }, 500);
 	}
 
-	var restart = function() {
-		init();
-	}
-
-	function start() {
-		console.log('Starting DripBot v' + version + '!');
-		if (story.state != 0) {
-			console.log("Starting story.");
-			storyPid = setInterval(function() { traverseStory(); }, 100);
-		} else {
-			console.log("Resuming.")
-			autoBuyTopThingPid = setInterval(function() { autoBuyTopThing(); }, 500);
-		}
-		clickerPid = setInterval(function() { clickCup(); }, 30);
-	}
 
 	init();
 
 	return {
-		powerups: powerups,
-		showBangForBuck: showBangForBuck,
 		buyPowerup: buyPowerup,
 		buyUpgrade: buyUpgrade,
-		autoBuyTopThing: autoBuyTopThing,
+
+		getSortedUpgradeList: getSortedUpgradeList,
+		getOTBList: getOTBList,
+		sortOTBList: sortOTBList,
+
 		protectLead: protectLead,
 		protectLeadStart: protectLeadStart,
-		traverseStory: traverseStory,
+
 		click: clickCup,
 		drip: drip,
+
 		getBytes: getBytes,
 		getCapacity: getCapacity,
 		atMaxBytes: atMaxBytes,
-		getOTBList: getOTBList,
+
 		stop: stop,
-		init: init,
-		restart: restart,
-		start: start
+		restart: restart
 	};
 }($));
