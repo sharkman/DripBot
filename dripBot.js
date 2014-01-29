@@ -23,15 +23,17 @@ $dripBot = (function($) {
 					this.bps = o.powerup.totalBps * 0.1;
 				}
 			}
+			this.realPrice = o.price;
 			this.price = o.price;
 		} else {
 			this.isUpgrade = false;
 			this.bps = o.currentBps;
 			this.item = o;
+			this.realPrice = o.currentPrice;
 			this.price = o.currentPrice;
 		}
-		if(getCapacity() < this.price) {
-			this.price = (this.price - getCapacity()) * 2 + getCapacity();
+		if(getCapacity() < this.realPrice) {
+			this.price = (this.realPrice - getCapacity()) * 2 + getCapacity();
 		}
 
 		if(! this.item.available) {
@@ -222,7 +224,7 @@ $dripBot = (function($) {
 			getNewTopThing();
 		}
 
-		if(getBytes() >= topThing.price) {
+		if(getBytes() >= topThing.realPrice) {
 			if(topThing.isUpgrade) {
 				buyUpgrade(topThing.item.name);
 			} else {
@@ -231,8 +233,8 @@ $dripBot = (function($) {
 
 			getNewTopThing();
 		} else {
-			if(getCapacity() < topThing.price) {
-				if((getBytes() + getCapacity()) >= topThing.price || atMaxBytes()) {
+			if(getCapacity() < topThing.realPrice) {
+				if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
 					drip();
 				}
 			}
