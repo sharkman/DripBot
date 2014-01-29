@@ -14,5 +14,6 @@ Stages
 Usage
 -----
 Paste the following into your browser's console and press Enter: `$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');`
+
 For more information on browser consoles, see <http://webmasters.stackexchange.com/questions/8525/how-to-open-the-javascript-console-in-different-browsers> (YMMV).
 
