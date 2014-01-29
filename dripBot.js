@@ -5,6 +5,7 @@ $dripBot = (function($) {
 	stage2Pid = -1,
 	clickerPid = -1,
 	protectLeadPid = -1,
+	BPSThreshold = 7 * 1024 * 1024,
 	powerups = {},
 	topThing = null;
 
@@ -190,6 +191,13 @@ $dripBot = (function($) {
 		return false;
 	}
 
+	var setBPSThreshold = function(num) {
+		if(num && num > 0) {
+			BPSThreshold = num * 1024 * 1024;
+		}
+		return BPSThreshold;
+	}
+
 	var stage1 = function() {
 		if(story.state == 6) {
 			drip();
@@ -215,7 +223,7 @@ $dripBot = (function($) {
 	}
 
 	var stage2 = function() {
-		if(localStats.bps >= 7 * 1024 * 1024) {
+		if(localStats.bps >= BPSThreshold) {
 			console.log("Proceeding to stage 3.");
 			clearInterval(stage2Pid);
 		}
@@ -293,6 +301,7 @@ $dripBot = (function($) {
 		getBytes: getBytes,
 		getCapacity: getCapacity,
 		atMaxBytes: atMaxBytes,
+		setBPSThreshold: setBPSThreshold,
 
 		stop: stop,
 		restart: restart
