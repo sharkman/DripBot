@@ -30,6 +30,10 @@ $dripBot = (function($) {
 			this.item = o;
 			this.price = o.currentPrice;
 		}
+		if(getCapacity() < this.price) {
+			this.price = (this.price - getCapacity()) * 2 + getCapacity();
+		}
+
 		if(! this.item.available) {
 			this.timeToPurchase = (this.price - localStats.byteCount) / localStats.bps;
 		} else {
