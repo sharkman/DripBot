@@ -1,4 +1,4 @@
-DripBot
+DripBot v1.0
 =======
 
 Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimally and automatically.
