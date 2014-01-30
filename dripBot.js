@@ -9,6 +9,7 @@ $dripBot = (function($) {
 	powerups = {},
 	timeOfLeaderChange = 0,
 	currentLeader = '',
+	benevolentLeader = false;
 	topThing = null;
 
 	var clickButton = $('a#btn-addMem'),
@@ -191,6 +192,11 @@ $dripBot = (function($) {
 		return BPSThreshold;
 	}
 
+	var setBenevolentLeader = function(bool) {
+		benevolentLeader = bool || false;
+		return benevolentLeader;
+	}
+
 	var stage1 = function() {
 		if(story.state == 6) {
 			drip();
@@ -279,6 +285,10 @@ $dripBot = (function($) {
 				var diffTime = $.time;
 				console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
 			}
+
+			if(!benevolentLeader) {
+				drip();
+			}
 		}
 	}
 
@@ -334,6 +344,7 @@ $dripBot = (function($) {
 		drip: drip,
 
 		setBPSThreshold: setBPSThreshold,
+		setBenevolentLeader: setBenevolentLeader,
 
 		stop: stop,
 		restart: restart
