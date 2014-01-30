@@ -6,9 +6,9 @@ Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimall
 Stages
 ------
 
-1. Traverses the story, starting the game from any point.
-2. Builds B/s as fast as possible, optimizing powerup and upgrade purchases with minimal dripping (dripping is waste).
-3. (Not yet perfected) Attempts to climb to first place by dripping constantly, and optionally stops when achieved.
+1. *Story:* Traverses the story, starting the game from any point.
+2. *Purchase:* Builds B/s as fast as possible, optimizing powerup and upgrade purchases with minimal dripping (dripping is waste).
+3. *Win:* Attempts to climb to first place by dripping constantly, and optionally stops when achieved.
 
 
 Usage

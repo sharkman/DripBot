@@ -3,10 +3,12 @@ $dripBot = (function($) {
 	var version = '1.0',
 	stage1Pid = -1,
 	stage2Pid = -1,
+	stage3Pid = -1,
 	clickerPid = -1,
-	protectLeadPid = -1,
 	BPSThreshold = 7 * 1024 * 1024,
 	powerups = {},
+	timeOfLeaderChange = 0,
+	currentLeader = '',
 	topThing = null;
 
 	var clickButton = $('a#btn-addMem'),
@@ -99,32 +101,11 @@ $dripBot = (function($) {
 
 	var i = 1;
 	localStats.powerUps.forEach(function(pu) { powerups[pu.name] = '#pu' + i++; });
+
+	var getLeader = function() {
+		return $('div#leaderBoard table tbody').children('tr').first().children('td').eq(1).text();
+	}
 	
-	var timeOfChange = 0;
-	var protectLead = function() { 
-		var leaderName = $('div#leaderBoard table tbody').children('tr').first().children('td').eq(1).text();
-		if (leaderName != networkUser.userName) {
-			if (protectLeadPid == -1) {
-				timeOfChange = $.now();
-				console.log("As of " + $.now() + " there is one fairer in the land... it is " + leaderName);
-				$('#btn-addGlobalMem').click();
-				protectLeadPid = setInterval( function() { $('#btn-addGlobalMem').click()}, 9500);
-			}
-
-		} else {
-			if (protectLeadPid != -1) {
-				var diffTime = $.time;
-				console.log("as of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover)");
-				clearInterval(protectLeadPid);
-				protectLeadPid = -1;
-			}
-		}
-	}
-
-	var protectLeadStart = function() {
-		protectLeadPid = setInterval( function() { protectLead() }, 1000);
-	}
-
 	var getClickingBps = function() {
 		return CoffeeCup.calcBytesPerClick() * 20;
 	}
@@ -147,6 +128,18 @@ $dripBot = (function($) {
 
 	var atMaxBytes = function() {
 		return getBytes() == getCapacity();
+	}
+
+	var getBPS = function() {
+		return localStats.bps;
+	}
+
+	var atBPSCap = function() {
+		return getBPS() >= BPSThreshold;
+	}
+
+	var getMyName = function() {
+		return networkUser.userName;
 	}
 
 	var getSortedUpgradeList = function() {
@@ -212,9 +205,10 @@ $dripBot = (function($) {
 		}
 
 		if(story.state == 12) {
+			console.log("Proceeding to stage 2 (Purchase).");
 			clearInterval(stage1Pid);
 			stage2Pid = setInterval(function() { stage2(); }, 500);
-			console.log("Proceeding to stage 2.");
+			return;
 		}
 
 		if(story.state != 12 && atMaxBytes()) {
@@ -223,9 +217,12 @@ $dripBot = (function($) {
 	}
 
 	var stage2 = function() {
-		if(localStats.bps >= BPSThreshold) {
-			console.log("Proceeding to stage 3.");
+		if(atBPSCap()) {
+			console.log("Proceeding to stage 3 (Win).");
+			topThing = null;
 			clearInterval(stage2Pid);
+			stage3Pid = setInterval(function() { stage3(); }, 500);
+			return;
 		}
 
 		if(topThing == null) {
@@ -249,12 +246,50 @@ $dripBot = (function($) {
         }
 	}
 
+	var stage3 = function() { 
+		if(!atBPSCap()) {
+			console.log("Reverting to stage 2 (Purchase).");
+			currentLeader = null;
+			timeOfLeaderChange = null;
+			clearInterval(stage3Pid);
+			stage2Pid = setInterval(function() { stage2(); }, 500);
+			return;
+		}
+
+		var leaderName = getLeader();
+		if(!currentLeader) {
+			currentLeader = getMyName();
+		}
+
+		if (leaderName != getMyName()) {
+			if(currentLeader == getMyName()) {
+				currentLeader = leaderName;
+				timeOfLeaderChange = $.now();
+				console.log("As of " + timeOfLeaderChange + " there is one fairer in the land... it is '" + leaderName + "'.");
+
+			} else if(leaderName != currentLeader) {
+				console.log("Leader changed from '" + currentLeader + "' to '" + leaderName + "'.");
+				currentLeader = leaderName;
+			}
+			drip();
+
+		} else {
+			if (currentLeader != leaderName) {
+				currentLeader = leaderName;
+				var diffTime = $.time;
+				console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
+			}
+		}
+	}
+
 	var stop = function() {
 		clearInterval(stage1Pid);
 		clearInterval(stage2Pid);
+		clearInterval(stage3Pid);
 		clearInterval(clickerPid);
 		stage1Pid = -1;
 		stage2Pid = -1;
+		stage3Pid = -1;
 		clickerPid = -1;
 	}
 
@@ -263,9 +298,12 @@ $dripBot = (function($) {
 		if (story.inProgress) {
 			console.log("Starting or resuming story.");
 			stage1Pid = setInterval(function() { stage1(); }, 100);
-		} else {
-			console.log("Resuming game.")
+		} else if(!atBPSCap()) {
+			console.log("Resuming stage 2 (Purchase).");
 			stage2Pid = setInterval(function() { stage2(); }, 500);
+		} else {
+			console.log("Resuming stage 3 (Win).");
+			stage3Pid = setInterval(function() { stage3(); }, 500);
 		}
 		clickerPid = setInterval(function() { clickCup(); }, 30);
 	}
@@ -292,15 +330,9 @@ $dripBot = (function($) {
 		getOTBList: getOTBList,
 		sortOTBList: sortOTBList,
 
-		protectLead: protectLead,
-		protectLeadStart: protectLeadStart,
-
 		click: clickCup,
 		drip: drip,
 
-		getBytes: getBytes,
-		getCapacity: getCapacity,
-		atMaxBytes: atMaxBytes,
 		setBPSThreshold: setBPSThreshold,
 
 		stop: stop,
