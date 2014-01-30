@@ -5,6 +5,7 @@ $dripBot = (function($) {
 	stage2Pid = -1,
 	stage3Pid = -1,
 	clickerPid = -1,
+	clickInterval = 30,
 	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
@@ -193,6 +194,17 @@ $dripBot = (function($) {
 		return BPSThreshold;
 	}
 
+	var setClickInterval = function(num) {
+		if(num && num > 0) {
+			clickInterval = num;
+		}
+		if(clickerPid != -1) {
+			clearInterval(clickerPid);
+			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
+		}
+		return clickInterval;
+	}
+
 	var setBenevolentLeader = function(bool) {
 		benevolentLeader = bool || false;
 		return benevolentLeader;
@@ -321,7 +333,7 @@ $dripBot = (function($) {
 			console.log("Resuming stage 3 (Win).");
 			stage3Pid = setInterval(function() { stage3(); }, 500);
 		}
-		clickerPid = setInterval(function() { clickCup(); }, 30);
+		clickerPid = setInterval(function() { clickCup(); }, clickInterval);
 	}
 
 	var restart = function() {
@@ -358,6 +370,7 @@ $dripBot = (function($) {
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
+		setClickInterval: setClickInterval,
 
 		stop: stop,
 		restart: restart
