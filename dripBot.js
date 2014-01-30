@@ -10,6 +10,7 @@ $dripBot = (function($) {
 	timeOfLeaderChange = 0,
 	currentLeader = '',
 	benevolentLeader = false;
+	showPops = false;
 	topThing = null;
 
 	var clickButton = $('a#btn-addMem'),
@@ -197,6 +198,11 @@ $dripBot = (function($) {
 		return benevolentLeader;
 	}
 
+	var setShowPops = function(bool) {
+		showPops = bool || false;
+		return showPops;
+	}
+
 	var stage1 = function() {
 		if(story.state == 6) {
 			drip();
@@ -319,12 +325,18 @@ $dripBot = (function($) {
 	}
 
 	var restart = function() {
-		init();
+		start();
 	}
 
 	var init = function() {
 		document.hasFocus = function() { return true; };
 		AnonymousUserManager.canDrip = function() { return true; };
+		popManager.oldNewPop = popManager.newPop;
+		popManager.newPop = function(e, t, a) {
+			if(showPops || (e.indexOf('addMem') == -1 && e != 'chartContainer')) {
+				popManager.oldNewPop(e,t,a);
+			}
+		}
 		clickCup();
 		setTimeout(function() { start(); }, 500);
 	}
@@ -345,6 +357,7 @@ $dripBot = (function($) {
 
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
+		setShowPops: setShowPops,
 
 		stop: stop,
 		restart: restart
