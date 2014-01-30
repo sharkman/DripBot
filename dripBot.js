@@ -5,7 +5,7 @@ $dripBot = (function($) {
 	stage2Pid = -1,
 	stage3Pid = -1,
 	clickerPid = -1,
-	BPSThreshold = 7 * 1024 * 1024,
+	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
 	currentLeader = '',
@@ -186,7 +186,7 @@ $dripBot = (function($) {
 
 	var setBPSThreshold = function(num) {
 		if(num && num > 0) {
-			BPSThreshold = num * 1024 * 1024;
+			BPSThreshold = num * 1000 * 1000;
 		}
 		return BPSThreshold;
 	}
