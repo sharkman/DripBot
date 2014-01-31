@@ -1,4 +1,9 @@
-$dripBot = (function($) {
+$dripBot = (function($, $dripBot) {
+
+	if($dripBot instanceof Object) {
+		console.log("Refusing to run two dripBots (this could have unintended side effects).  Please refresh to update.");
+		return $dripBot;
+	}
 
 	var version = '1.0',
 	stage1Pid = -1,
@@ -337,6 +342,7 @@ $dripBot = (function($) {
 	}
 
 	var restart = function() {
+		stop();
 		start();
 	}
 
@@ -375,4 +381,4 @@ $dripBot = (function($) {
 		stop: stop,
 		restart: restart
 	};
-}($));
+}($, $dripBot));
