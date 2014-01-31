@@ -381,4 +381,4 @@ $dripBot = (function($, $dripBot) {
 		stop: stop,
 		restart: restart
 	};
-}($, $dripBot));
+}($, (typeof($dripBot) !== 'undefined' ? $dripBot : null)));
