@@ -41,6 +41,9 @@ $dripBot = (function($, $dripBot, isPro) {
 			alert("Please sign in to continue playing.  After the page is reloaded, make sure to start DripBot again.");
 		}
 		if(!errorAlerted && $('div#networkError').is(':visible')) {
+			if(isDripBotPro) {
+				location.reload();
+			}
 			errorAlerted = true;
 			alert("DripBot has detected that the game errored (way to go, dripstat).  Please refresh your browser and re-run DripBot.");
 		}
