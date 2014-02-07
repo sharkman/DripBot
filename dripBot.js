@@ -28,7 +28,7 @@ $dripBot = (function($, $dripBot) {
 	showPops = false,
 	topThing = null;
 
-	var displayBox = '<div id="dripbot"><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p></li></ul></div>';
+	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p></li></ul></div>';
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
