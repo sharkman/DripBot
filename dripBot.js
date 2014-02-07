@@ -43,9 +43,10 @@ $dripBot = (function($, $dripBot, isPro) {
 		if(!errorAlerted && $('div#networkError').is(':visible')) {
 			if(isDripBotPro) {
 				location.reload();
+			} else {
+				errorAlerted = true;
+				alert("DripBot has detected that the game errored (way to go, dripstat).  Please refresh your browser and re-run DripBot.");
 			}
-			errorAlerted = true;
-			alert("DripBot has detected that the game errored (way to go, dripstat).  Please refresh your browser and re-run DripBot.");
 		}
 	}
 
