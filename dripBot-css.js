@@ -4,9 +4,11 @@ $('#dripbot-title').css({
 });
 
 $('#dripbot').css({
-        "text-align": "left"
+    "text-align": "left"
 });
 
 $('#dripbot-toggle.stop').css({
-        "background-color": "#e9656d"
+    "background-color": "#e9656d",
+    "color": "white",
+	"margin-top": "-10px"
 });

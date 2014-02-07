@@ -5,23 +5,65 @@ $dripBot = (function($, $dripBot) {
 		return $dripBot;
 	}
 
-	var version = '1.0',
+	var version = '1.1',
 	stage1Pid = -1,
 	stage2Pid = -1,
 	stage3Pid = -1,
+	stage = '',
+	started = false,
+	status = 'Running',
+	stopColor = '#e9656d',
+	startColor = '#47a447',
 	clickerPid = -1,
-	clickInterval = 30,
+	clickInterval = 45,
 	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
 	currentLeader = '',
-	benevolentLeader = false;
-	showPops = false;
+	benevolentLeader = false,
+	showPops = false,
 	topThing = null;
+
+	var displayBox = '<div id="dripbot"><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p></p></li><li id="click-interval"><p></p></li></ul></div>';
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
+
+	var updateTitleText = function() {
+		$('#dripbot-title').text('DripBot v' + version + ', Stage ' + stage + ' (Status: ' + status + ')')
+	}
+
+	var toggleStopButton = function(started) {
+		var color;
+		var toggle = $('#dripbot-toggle');
+		if(started) {
+			color = stopColor;
+			toggle.text('Stop');
+			toggle.attr("onclick", "$dripBot.stop(); return false;")
+		} else {
+			color = startColor;
+			toggle.text('Start');
+			toggle.attr("onclick", "$dripBot.start(); return false")
+		}
+
+		toggle.css({
+			"background-color": color
+		});
+	}
+
+	var updateNextPurchase = function(purchase) {
+		str = '';
+		if(purchase.isUpgrade) {
+			str += '(Upgrade) ';
+		}
+		str += purchase.item.name;
+		$('#next-purchase p').text('Next Purchase: ' + str);
+	}
+
+	var updateClickInterval = function() {
+		$('#click-interval p').text("Clicking every: " + clickInterval + 'ms');
+	}
 
 	function OTB(o, upgrade) {
 		if(upgrade) {
@@ -104,6 +146,7 @@ $dripBot = (function($, $dripBot) {
 		if(topThing == null) {
 			topThing = sortOTBList(getOTBList())[0];
 		}
+		updateNextPurchase(topThing);
 		console.log("Next purchase" + (topThing.isUpgrade ? " (upgrade)" : "") + ": " + topThing.item.name);
 	}
 
@@ -207,6 +250,7 @@ $dripBot = (function($, $dripBot) {
 			clearInterval(clickerPid);
 			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
 		}
+		updateClickInterval();
 		return clickInterval;
 	}
 
@@ -247,10 +291,12 @@ $dripBot = (function($, $dripBot) {
 
 	var stage2 = function() {
 		if(atBPSCap()) {
+			stage = '3';
 			console.log("Proceeding to stage 3 (Win).");
 			topThing = null;
 			clearInterval(stage2Pid);
 			stage3Pid = setInterval(function() { stage3(); }, 500);
+			updateTitleText();
 			return;
 		}
 
@@ -277,11 +323,13 @@ $dripBot = (function($, $dripBot) {
 
 	var stage3 = function() { 
 		if(!atBPSCap()) {
+			stage = '2';
 			console.log("Reverting to stage 2 (Purchase).");
 			currentLeader = null;
 			timeOfLeaderChange = null;
 			clearInterval(stage3Pid);
 			stage2Pid = setInterval(function() { stage2(); }, 500);
+			updateTitleText();
 			return;
 		}
 
@@ -316,6 +364,13 @@ $dripBot = (function($, $dripBot) {
 	}
 
 	var stop = function() {
+		if(!started) {
+			return;
+		} else {
+			started = false;
+			status = 'Stopped';
+		}
+		console.log('Stopping DripBot.');
 		clearInterval(stage1Pid);
 		clearInterval(stage2Pid);
 		clearInterval(stage3Pid);
@@ -324,20 +379,33 @@ $dripBot = (function($, $dripBot) {
 		stage2Pid = -1;
 		stage3Pid = -1;
 		clickerPid = -1;
+		updateTitleText();
+		toggleStopButton(false);
 	}
 
 	var start = function() {
+		if(started) {
+			return;
+		} else {
+			started = true;
+			status = 'Running';
+		}
 		console.log('Starting DripBot v' + version + '!');
 		if (story.inProgress) {
 			console.log("Starting or resuming story.");
+			stage = '1';
 			stage1Pid = setInterval(function() { stage1(); }, 100);
 		} else if(!atBPSCap()) {
+			stage = '2';
 			console.log("Resuming stage 2 (Purchase).");
 			stage2Pid = setInterval(function() { stage2(); }, 500);
 		} else {
+			stage = '3';
 			console.log("Resuming stage 3 (Win).");
 			stage3Pid = setInterval(function() { stage3(); }, 500);
 		}
+		updateTitleText();
+		toggleStopButton(true);
 		clickerPid = setInterval(function() { clickCup(); }, clickInterval);
 	}
 
@@ -355,6 +423,9 @@ $dripBot = (function($, $dripBot) {
 				popManager.oldNewPop(e,t,a);
 			}
 		}
+		$('div#middleColumn').append(displayBox);
+		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
+		updateClickInterval();
 		clickCup();
 		setTimeout(function() { start(); }, 500);
 	}
@@ -363,22 +434,13 @@ $dripBot = (function($, $dripBot) {
 	init();
 
 	return {
-		buyPowerup: buyPowerup,
-		buyUpgrade: buyUpgrade,
-
-		getSortedUpgradeList: getSortedUpgradeList,
-		getOTBList: getOTBList,
-		sortOTBList: sortOTBList,
-
-		click: clickCup,
-		drip: drip,
-
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
 		setClickInterval: setClickInterval,
 
 		stop: stop,
+		start: start,
 		restart: restart
 	};
 }($, (typeof($dripBot) !== 'undefined' ? $dripBot : null)));
