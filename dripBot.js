@@ -1,4 +1,4 @@
-$dripBot = (function($, $dripBot) {
+$dripBot = (function($, $dripBot, isPro) {
 
 	if($dripBot instanceof Object) {
 		console.log("Refusing to run two dripBots (this could have unintended side effects).  Please refresh to update.");
@@ -6,6 +6,7 @@ $dripBot = (function($, $dripBot) {
 	}
 
 	var version = '1.1',
+	isDripBotPro = isPro,
 	stage1Pid = -1,
 	stage2Pid = -1,
 	stage3Pid = -1,
@@ -46,7 +47,7 @@ $dripBot = (function($, $dripBot) {
 	}
 
 	var updateTitleText = function() {
-		$('#dripbot-title').text('DripBot v' + version + ', Stage ' + stage + ' (Status: ' + status + ')')
+		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage + ' (Status: ' + status + ')')
 	}
 
 	var toggleStopButton = function(started) {
@@ -467,4 +468,8 @@ $dripBot = (function($, $dripBot) {
 		start: start,
 		restart: restart
 	};
-}($, (typeof($dripBot) !== 'undefined' ? $dripBot : null)));
+}(
+	$,
+	(typeof($dripBot) !== 'undefined' ? $dripBot : null),
+	(typeof(window.dripBotPro) !== 'undefined' ? window.dripBotPro : false)
+));
