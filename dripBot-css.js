@@ -12,3 +12,7 @@ $('#dripbot-toggle.stop').css({
     "color": "white",
 	"margin-top": "-10px"
 });
+
+$('#dripbot ul li p').css({
+	"margin-bottom":"5px"
+});
