@@ -16,3 +16,9 @@ $('#dripbot-toggle.stop').css({
 $('#dripbot ul li p').css({
 	"margin-bottom":"5px"
 });
+
+$('img#dripbot-logo').css({
+	"margin-bottom": "10px",
+	"margin-right": "5px"
+});
+
