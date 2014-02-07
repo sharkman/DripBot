@@ -9,8 +9,10 @@ $dripBot = (function($, $dripBot) {
 	stage1Pid = -1,
 	stage2Pid = -1,
 	stage3Pid = -1,
+	canBuy = true,
 	errorCheckPid = -1,
 	errorAlerted = false,
+	signupAlerted = false,
 	stage = '',
 	started = false,
 	status = 'Running',
@@ -26,17 +28,18 @@ $dripBot = (function($, $dripBot) {
 	showPops = false,
 	topThing = null;
 
-	var displayBox = '<div id="dripbot"><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p></p></li><li id="click-interval"><p></p></li></ul></div>';
+	var displayBox = '<div id="dripbot"><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p></li></ul></div>';
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
 
 	var checkForError = function() {
-		if(errorAlerted) {
-			return;
+		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
+			signupAlerted = true;
+			alert("Please sign in to continue playing.  After the page is reloaded, make sure to start DripBot again.");
 		}
-		if($('div#networkError').is(':visible')) {
+		if(!errorAlerted && $('div#networkError').is(':visible')) {
 			errorAlerted = true;
 			alert("DripBot has detected that the game errored (way to go, dripstat).  Please refresh your browser and re-run DripBot.");
 		}
@@ -290,9 +293,11 @@ $dripBot = (function($, $dripBot) {
 		}
 
 		if(story.state == 12) {
+			stage = '2';
 			console.log("Proceeding to stage 2 (Purchase).");
 			clearInterval(stage1Pid);
 			stage2Pid = setInterval(function() { stage2(); }, 500);
+			updateTitleText();
 			return;
 		}
 
@@ -307,7 +312,7 @@ $dripBot = (function($, $dripBot) {
 			console.log("Proceeding to stage 3 (Win).");
 			topThing = null;
 			clearInterval(stage2Pid);
-			stage3Pid = setInterval(function() { stage3(); }, 500);
+			stage3Pid = setInterval(function() { stage3(); }, 1000);
 			updateTitleText();
 			return;
 		}
@@ -317,13 +322,17 @@ $dripBot = (function($, $dripBot) {
 		}
 
 		if(getBytes() >= topThing.realPrice) {
-			if(topThing.isUpgrade) {
-				buyUpgrade(topThing.item.name);
-			} else {
-				buyPowerup(topThing.item.name);
-			}
+			if(canBuy) {
+				if(topThing.isUpgrade) {
+					buyUpgrade(topThing.item.name);
+				} else {
+					buyPowerup(topThing.item.name);
+				}
+				canBuy = false;
+				setTimeout(function() { canBuy = true; }, 800);
 
-			getNewTopThing();
+				getNewTopThing();
+			}
 		} else {
 			if(getCapacity() < topThing.realPrice) {
 				if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
@@ -416,7 +425,7 @@ $dripBot = (function($, $dripBot) {
 		} else {
 			stage = '3';
 			console.log("Resuming stage 3 (Win).");
-			stage3Pid = setInterval(function() { stage3(); }, 500);
+			stage3Pid = setInterval(function() { stage3(); }, 1000);
 		}
 		updateTitleText();
 		toggleStopButton(true);
