@@ -9,6 +9,8 @@ $dripBot = (function($, $dripBot) {
 	stage1Pid = -1,
 	stage2Pid = -1,
 	stage3Pid = -1,
+	errorCheckPid = -1,
+	errorAlerted = false,
 	stage = '',
 	started = false,
 	status = 'Running',
@@ -29,6 +31,16 @@ $dripBot = (function($, $dripBot) {
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
+
+	var checkForError = function() {
+		if(errorAlerted) {
+			return;
+		}
+		if($('div#networkError').is(':visible')) {
+			errorAlerted = true;
+			alert("DripBot has detected that the game errored (way to go, dripstat).  Please refresh your browser and re-run DripBot.");
+		}
+	}
 
 	var updateTitleText = function() {
 		$('#dripbot-title').text('DripBot v' + version + ', Stage ' + stage + ' (Status: ' + status + ')')
@@ -375,10 +387,12 @@ $dripBot = (function($, $dripBot) {
 		clearInterval(stage2Pid);
 		clearInterval(stage3Pid);
 		clearInterval(clickerPid);
+		clearInterval(errorCheckPid);
 		stage1Pid = -1;
 		stage2Pid = -1;
 		stage3Pid = -1;
 		clickerPid = -1;
+		errorCheckPid = -1;
 		updateTitleText();
 		toggleStopButton(false);
 	}
@@ -407,6 +421,7 @@ $dripBot = (function($, $dripBot) {
 		updateTitleText();
 		toggleStopButton(true);
 		clickerPid = setInterval(function() { clickCup(); }, clickInterval);
+		errorCheckPid = setInterval(function() { checkForError(); }, 2000);
 	}
 
 	var restart = function() {
