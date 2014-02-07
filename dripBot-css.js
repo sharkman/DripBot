@@ -1,5 +1,5 @@
 $('#dripbot-title').css({
-	"text-align": "left"
+	"text-align": "left",
 	"display": "inline-block",
 	"float": "left",
 	"margin-right": "20px"
