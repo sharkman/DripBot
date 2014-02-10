@@ -5,7 +5,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		return $dripBot;
 	}
 
-	var version = '1.1',
+	var version = '1.2',
 	isDripBotPro = isPro,
 	stage1Pid = -1,
 	stage2Pid = -1,
@@ -480,7 +480,7 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
-		if(temp >= 0.98) {
+		if(temp >= 0.987) {
 			temp = temp * 3 * MINUTE + 4 * MINUTE;
 		} else {
 			temp =  temp * 500 + 500;
