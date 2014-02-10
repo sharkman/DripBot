@@ -11,13 +11,12 @@ $dripBot = (function($, $dripBot, isPro) {
 	stage2Pid = -1,
 	stage3Pid = -1,
 	canBuy = true,
+	started = false,
 	errorCheckPid = -1,
 	errorAlerted = false,
 	signupAlerted = false,
 	stage = '',
-	started = false,
-	clicking = false,
-	status = 'Running',
+	status = 'Stopped',
 	stopColor = '#e9656d',
 	startColor = '#47a447',
 	clickerPid = -1,
@@ -30,6 +29,38 @@ $dripBot = (function($, $dripBot, isPro) {
 	showPops = true,
 	MINUTE = 60 * 1000,
 	topThing = null;
+
+	function Save(name, def) {
+		this.prefix = "dsb"
+		this.name = name;
+		this.obj = null;
+
+		this.read = function() {
+			try {
+				this.obj = JSON.parse(localStorage.getItem(this.prefix + "." + this.name));
+			} catch(e) {}
+		}
+
+		this.save = function() {
+			try {
+				localStorage.setItem(this.prefix + "." + this.name, JSON.stringify(this.obj));
+			} catch(e) {}
+		}
+
+		this.set = function(obj) {
+			this.obj = obj;
+			this.save();
+		}
+
+		this.read();
+		if(this.obj === null) {
+			this.obj = def;
+			this.save();
+		}
+	}
+
+	var startOnLoad = new Save('startOnLoad', true);
+	var clicking = new Save('clicking', false);
 
 	function Rc4Random(seed) {
 		var keySchedule = [];
@@ -101,7 +132,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var toggleClickButton = function() {
-		toggleButton(clicking, $('#dripbot-click-toggle'), 'stopClicking()', 'startClicking()');
+		toggleButton(clicking.obj, $('#dripbot-click-toggle'), 'stopClicking()', 'startClicking()');
 	}
 
 	var toggleButton = function(started, button, ftrue, ffalse) {
@@ -316,16 +347,17 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var stopClicking = function() {
-		clicking = false;
+		clicking.set(false);
 		clearTimeout(clickerPid);
 		clickerPid = -1;
 		toggleClickButton();
 	}
 
 	var startClicking = function() {
-		if(!clicking && clickerPid == -1) {
-			clicking = true;
+		if(!clicking.obj && clickerPid == -1) {
+			clicking.set(true);
 			clickInterval = getNewClickTimeout();
+			updateClickInterval();
 			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
 			toggleClickButton();
 		}
@@ -458,12 +490,12 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var smartChainClick = function() {
-		if(clicking) {
+		if(clicking.obj) {
 			clickInterval = getNewClickTimeout();
 			updateClickInterval();
 		}
 
-		if(clicking) {
+		if(clicking.obj) {
 			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
 			clickCup();
 		}
@@ -474,6 +506,7 @@ $dripBot = (function($, $dripBot, isPro) {
 			return;
 		} else {
 			started = false;
+			startOnLoad.set(false);
 			status = 'Stopped';
 		}
 		console.log('Stopping DripBot.');
@@ -485,8 +518,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		stage1Pid = -1;
 		stage2Pid = -1;
 		stage3Pid = -1;
-		clickerPid = -1;
-		clicking = false;
+		stopClicking();
 		toggleClickButton();
 		errorCheckPid = -1;
 		updateTitleText();
@@ -498,6 +530,7 @@ $dripBot = (function($, $dripBot, isPro) {
 			return;
 		} else {
 			started = true;
+			startOnLoad.set(true);
 			status = 'Running';
 		}
 		console.log('Starting DripBot v' + version + '!');
@@ -535,10 +568,15 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 		$('div#middleColumn').append(displayBox);
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
+		updateTitleText();
+		toggleStopButton(started);
 		updateClickInterval();
 		toggleClickButton();
 		clickCup();
-		setTimeout(function() { start(); }, 500);
+		console.log(JSON.stringify(startOnLoad));
+		if(startOnLoad.obj) {
+			setTimeout(function() { start(); }, 500);
+		}
 	}
 
 	init();
