@@ -28,6 +28,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	benevolentLeader = false,
 	showPops = true,
 	MINUTE = 60 * 1000,
+	longWaitPercent = 0.99,
 	topThing = null;
 
 	var getTopThing = function() {
@@ -509,7 +510,7 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
-		if(temp >= 0.987) {
+		if(temp >= longWaitPercent) {
 			temp = temp * 3 * MINUTE + 4 * MINUTE;
 		} else {
 			temp =  temp * 500 + 500;
