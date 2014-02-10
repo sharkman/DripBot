@@ -577,6 +577,9 @@ $dripBot = (function($, $dripBot, isPro) {
 		if(startOnLoad.obj) {
 			setTimeout(function() { start(); }, 500);
 		}
+		if(clicking.obj) {
+			smartChainClick();
+		}
 	}
 
 	init();
