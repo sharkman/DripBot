@@ -3,7 +3,8 @@ DripBot v1.1
 
 Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimally and automatically.
 
-*DripBot is an autoclicker as well!*  It hides the pesky popups from clicking the cup and global drips (they really kill framerate), but it is autoclicking for you.  The popups can be toggled with `$dripBot.setShowPops(bool);`, where `bool` is a boolean value (true/false).  Defaults to false.
+*DripBot is an autoclicker as well!*  Dripbot defaults to not clicking, and when it does click uses an algorith to attempt to appear human.  Although the algorithm is pretty good, *USE AT YOUR OWN RISK.*
+The pops from clicking and global dripping are on by default, and can be toggled with `$dripBot.setShowPops(bool);`, where `bool` is a boolean value (true/false).  Defaults to false.
 
 Usage
 -----
