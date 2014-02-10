@@ -28,7 +28,52 @@ $dripBot = (function($, $dripBot, isPro) {
 	currentLeader = '',
 	benevolentLeader = false,
 	showPops = true,
+	MINUTE = 60 * 1000,
 	topThing = null;
+
+	function Rc4Random(seed) {
+		var keySchedule = [];
+		var keySchedule_i = 0;
+		var keySchedule_j = 0;
+		
+		function init(seed) {
+			for (var i = 0; i < 256; i++)
+				keySchedule[i] = i;
+			
+			var j = 0;
+			for (var i = 0; i < 256; i++)
+			{
+				j = (j + keySchedule[i] + seed.charCodeAt(i % seed.length)) % 256;
+				
+				var t = keySchedule[i];
+				keySchedule[i] = keySchedule[j];
+				keySchedule[j] = t;
+			}
+		}
+		init(seed);
+		
+		function getRandomByte() {
+			keySchedule_i = (keySchedule_i + 1) % 256;
+			keySchedule_j = (keySchedule_j + keySchedule[keySchedule_i]) % 256;
+			
+			var t = keySchedule[keySchedule_i];
+			keySchedule[keySchedule_i] = keySchedule[keySchedule_j];
+			keySchedule[keySchedule_j] = t;
+			
+			return keySchedule[(keySchedule[keySchedule_i] + keySchedule[keySchedule_j]) % 256];
+		}
+		
+		this.getRandomNumber = function() {
+			var number = 0;
+			var multiplier = 1;
+			for (var i = 0; i < 8; i++) {
+				number += getRandomByte() * multiplier;
+				multiplier *= 256;
+			}
+			return number / 18446744073709551616;
+		}
+	}
+	var rc4Rand = new Rc4Random((new Date()).toString());
 
 	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
 
@@ -272,7 +317,7 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var stopClicking = function() {
 		clicking = false;
-		clearInterval(clickerPid);
+		clearTimeout(clickerPid);
 		clickerPid = -1;
 		toggleClickButton();
 	}
@@ -280,21 +325,10 @@ $dripBot = (function($, $dripBot, isPro) {
 	var startClicking = function() {
 		if(!clicking && clickerPid == -1) {
 			clicking = true;
-			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
+			clickInterval = getNewClickTimeout();
+			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
 			toggleClickButton();
 		}
-	}
-
-	var setClickInterval = function(num) {
-		if(num && num > 0) {
-			clickInterval = num;
-		}
-		if(clicking && clickerPid != -1) {
-			clearInterval(clickerPid);
-			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
-		}
-		updateClickInterval();
-		return clickInterval;
 	}
 
 	var setBenevolentLeader = function(bool) {
@@ -412,6 +446,29 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 	}
 
+	var getNewClickTimeout = function() {
+		var temp = rc4Rand.getRandomNumber();
+		if(temp >= 0.98) {
+			temp = temp * 3 * MINUTE + 4 * MINUTE;
+		} else {
+			temp =  temp * 500 + 500;
+		}
+
+		return Math.floor(temp);
+	}
+
+	var smartChainClick = function() {
+		if(clicking) {
+			clickInterval = getNewClickTimeout();
+			updateClickInterval();
+		}
+
+		if(clicking) {
+			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
+			clickCup();
+		}
+	}
+
 	var stop = function() {
 		if(!started) {
 			return;
@@ -484,14 +541,12 @@ $dripBot = (function($, $dripBot, isPro) {
 		setTimeout(function() { start(); }, 500);
 	}
 
-
 	init();
 
 	return {
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
-		setClickInterval: setClickInterval,
 
 		startClicking: startClicking,
 		stopClicking: stopClicking,
