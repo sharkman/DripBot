@@ -253,13 +253,10 @@ $dripBot = (function($, $dripBot, isPro) {
 			for(var j = 0; j < list.length; j++) {
 				var u = list[j];
 				if(u.name == otb.item.name) {
-					console.log("returning for " + u.name + ": " + $('#upg' + i).html());
 					return $('#upg' + i);
 				}
-				console.log(u.name + " is not " + otb.item.name);
 				i++;
 			}
-			console.log("RETURNING NOTHING OMGS.");
 			return $();
 		} else {
 			return $(powerups[otb.item.name]);
