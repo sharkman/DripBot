@@ -30,21 +30,25 @@ $dripBot = (function($, $dripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
+	var getTopThing = function() {
+		return topThing;
+	}
+
 	function Save(name, def) {
-		this.prefix = "dsb"
+		this.prefix = "dsb";
 		this.name = name;
 		this.obj = null;
 
 		this.read = function() {
 			try {
 				this.obj = JSON.parse(localStorage.getItem(this.prefix + "." + this.name));
-			} catch(e) {}
+			} catch(ignore) {}
 		}
 
 		this.save = function() {
 			try {
 				localStorage.setItem(this.prefix + "." + this.name, JSON.stringify(this.obj));
-			} catch(e) {}
+			} catch(ignore) {}
 		}
 
 		this.set = function(obj) {
@@ -198,6 +202,8 @@ $dripBot = (function($, $dripBot, isPro) {
 		} else {
 			this.timeToPurchase = 0;
 		}
+
+		this.ident = getIdentifierFromOTB(this);
 	}
 
 	var buyPowerup = function(name) {
@@ -240,7 +246,30 @@ $dripBot = (function($, $dripBot, isPro) {
 		});
 	}
 
+	var getIdentifierFromOTB = function(otb) {
+		if(otb.isUpgrade) {
+			var i = 1;
+			var list = getSortedUpgradeList();
+			for(var j = 0; j < list.length; j++) {
+				var u = list[j];
+				if(u.name == otb.item.name) {
+					console.log("returning for " + u.name + ": " + $('#upg' + i).html());
+					return $('#upg' + i);
+				}
+				console.log(u.name + " is not " + otb.item.name);
+				i++;
+			}
+			console.log("RETURNING NOTHING OMGS.");
+			return $();
+		} else {
+			return $(powerups[otb.item.name]);
+		}
+	}
+
 	var getNewTopThing = function() {
+		if(topThing !== null) {
+			topThing.ident.css({'background-color': ''});
+		}
 		topThing = null;
 		localStats.specialUpgrades.forEach(function(u) {
 			if(!u._purchased && u.available) {
@@ -251,6 +280,13 @@ $dripBot = (function($, $dripBot, isPro) {
 			topThing = sortOTBList(getOTBList())[0];
 		}
 		updateNextPurchase(topThing);
+		if(topThing.isUpgrade) {
+			setTimeout(function() {
+				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+			}, 300);
+		} else {
+			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+		}
 		console.log("Next purchase" + (topThing.isUpgrade ? " (upgrade)" : "") + ": " + topThing.item.name);
 	}
 
@@ -558,6 +594,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var init = function() {
+		$('div#upgrades').css({"height":"auto"});
 		document.hasFocus = function() { return true; };
 		AnonymousUserManager.canDrip = function() { return true; };
 		popManager.oldNewPop = popManager.newPop;
@@ -591,6 +628,8 @@ $dripBot = (function($, $dripBot, isPro) {
 
 		startClicking: startClicking,
 		stopClicking: stopClicking,
+
+		getTopThing: getTopThing,
 
 		stop: stop,
 		start: start,
