@@ -16,6 +16,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	signupAlerted = false,
 	stage = '',
 	started = false,
+	clicking = false,
 	status = 'Running',
 	stopColor = '#e9656d',
 	startColor = '#47a447',
@@ -26,10 +27,10 @@ $dripBot = (function($, $dripBot, isPro) {
 	timeOfLeaderChange = 0,
 	currentLeader = '',
 	benevolentLeader = false,
-	showPops = false,
+	showPops = true,
 	topThing = null;
 
-	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn stop" href="#" onclick="$dripBot.stop(); return false;">Stop</button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p></li></ul></div>';
+	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
@@ -54,22 +55,29 @@ $dripBot = (function($, $dripBot, isPro) {
 		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage + ' (Status: ' + status + ')')
 	}
 
-	var toggleStopButton = function(started) {
+	var toggleClickButton = function() {
+		toggleButton(clicking, $('#dripbot-click-toggle'), 'stopClicking()', 'startClicking()');
+	}
+
+	var toggleButton = function(started, button, ftrue, ffalse) {
 		var color;
-		var toggle = $('#dripbot-toggle');
 		if(started) {
 			color = stopColor;
-			toggle.text('Stop');
-			toggle.attr("onclick", "$dripBot.stop(); return false;")
+			button.text('Stop');
+			button.attr("onclick", "$dripBot." + ftrue + "; return false;");
 		} else {
 			color = startColor;
-			toggle.text('Start');
-			toggle.attr("onclick", "$dripBot.start(); return false")
+			button.text('Start');
+			button.attr("onclick", "$dripBot." + ffalse + "; return false");
 		}
 
-		toggle.css({
+		button.css({
 			"background-color": color
 		});
+	}
+
+	var toggleStopButton = function(started) {
+		toggleButton(started, $('#dripbot-toggle'), "stop()", "start()");
 	}
 
 	var updateNextPurchase = function(purchase) {
@@ -262,11 +270,26 @@ $dripBot = (function($, $dripBot, isPro) {
 		return BPSThreshold;
 	}
 
+	var stopClicking = function() {
+		clicking = false;
+		clearInterval(clickerPid);
+		clickerPid = -1;
+		toggleClickButton();
+	}
+
+	var startClicking = function() {
+		if(!clicking && clickerPid == -1) {
+			clicking = true;
+			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
+			toggleClickButton();
+		}
+	}
+
 	var setClickInterval = function(num) {
 		if(num && num > 0) {
 			clickInterval = num;
 		}
-		if(clickerPid != -1) {
+		if(clicking && clickerPid != -1) {
 			clearInterval(clickerPid);
 			clickerPid = setInterval(function() { clickCup(); }, clickInterval);
 		}
@@ -406,6 +429,8 @@ $dripBot = (function($, $dripBot, isPro) {
 		stage2Pid = -1;
 		stage3Pid = -1;
 		clickerPid = -1;
+		clicking = false;
+		toggleClickButton();
 		errorCheckPid = -1;
 		updateTitleText();
 		toggleStopButton(false);
@@ -434,7 +459,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 		updateTitleText();
 		toggleStopButton(true);
-		clickerPid = setInterval(function() { clickCup(); }, clickInterval);
 		errorCheckPid = setInterval(function() { checkForError(); }, 2000);
 	}
 
@@ -455,6 +479,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		$('div#middleColumn').append(displayBox);
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
 		updateClickInterval();
+		toggleClickButton();
 		clickCup();
 		setTimeout(function() { start(); }, 500);
 	}
@@ -467,6 +492,9 @@ $dripBot = (function($, $dripBot, isPro) {
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
 		setClickInterval: setClickInterval,
+
+		startClicking: startClicking,
+		stopClicking: stopClicking,
 
 		stop: stop,
 		start: start,
