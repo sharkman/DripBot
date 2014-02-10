@@ -166,7 +166,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var updateClickInterval = function() {
-		$('#click-interval p').text("Clicking every: " + clickInterval + 'ms');
+		$('#click-interval p').text("Next click in: " + clickInterval + 'ms');
 	}
 
 	function OTB(o, upgrade) {
