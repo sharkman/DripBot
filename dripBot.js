@@ -284,7 +284,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		} else {
 			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
 		}
-		console.log("Next purchase" + (topThing.isUpgrade ? " (upgrade)" : "") + ": " + topThing.item.name);
 	}
 
 	var i = 1;
@@ -421,7 +420,6 @@ $dripBot = (function($, $dripBot, isPro) {
 
 		if(story.state == 12) {
 			stage = '2';
-			console.log("Proceeding to stage 2 (Purchase).");
 			clearInterval(stage1Pid);
 			stage2Pid = setInterval(function() { stage2(); }, 500);
 			updateTitleText();
@@ -436,7 +434,6 @@ $dripBot = (function($, $dripBot, isPro) {
 	var stage2 = function() {
 		if(atBPSCap()) {
 			stage = '3';
-			console.log("Proceeding to stage 3 (Win).");
 			topThing = null;
 			clearInterval(stage2Pid);
 			stage3Pid = setInterval(function() { stage3(); }, 1000);
@@ -472,7 +469,6 @@ $dripBot = (function($, $dripBot, isPro) {
 	var stage3 = function() { 
 		if(!atBPSCap()) {
 			stage = '2';
-			console.log("Reverting to stage 2 (Purchase).");
 			currentLeader = null;
 			timeOfLeaderChange = null;
 			clearInterval(stage3Pid);
@@ -542,7 +538,6 @@ $dripBot = (function($, $dripBot, isPro) {
 			startOnLoad.set(false);
 			status = 'Stopped';
 		}
-		console.log('Stopping DripBot.');
 		clearInterval(stage1Pid);
 		clearInterval(stage2Pid);
 		clearInterval(stage3Pid);
@@ -566,18 +561,14 @@ $dripBot = (function($, $dripBot, isPro) {
 			startOnLoad.set(true);
 			status = 'Running';
 		}
-		console.log('Starting DripBot v' + version + '!');
 		if (story.inProgress) {
-			console.log("Starting or resuming story.");
 			stage = '1';
 			stage1Pid = setInterval(function() { stage1(); }, 100);
 		} else if(!atBPSCap()) {
 			stage = '2';
-			console.log("Resuming stage 2 (Purchase).");
 			stage2Pid = setInterval(function() { stage2(); }, 500);
 		} else {
 			stage = '3';
-			console.log("Resuming stage 3 (Win).");
 			stage3Pid = setInterval(function() { stage3(); }, 1000);
 		}
 		updateTitleText();
@@ -607,7 +598,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		updateClickInterval();
 		toggleClickButton();
 		clickCup();
-		console.log(JSON.stringify(startOnLoad));
 		if(startOnLoad.obj) {
 			setTimeout(function() { start(); }, 500);
 		}
