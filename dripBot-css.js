@@ -24,3 +24,10 @@ $('img#dripbot-logo').css({
 	"margin-right": "5px"
 });
 
+$('div#dripbot-update').css({
+	"background-color": "#e9656d"
+});
+
+$('div#dripbot-update h1').css({
+	"font-weight": "800",
+});
