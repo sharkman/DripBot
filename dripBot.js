@@ -1,8 +1,8 @@
-$dripBot = (function($, $dripBot, isPro) {
+$dripBot = (function($, oldDripBot, isPro) {
 
-	if($dripBot instanceof Object) {
-		console.log("Refusing to run two dripBots (this could have unintended side effects).  Please refresh to update.");
-		return $dripBot;
+	if(oldDripBot instanceof Object) {
+		console.log("Stopping old DripBot and starting a new one.");
+		oldDripBot.stop();
 	}
 
 	var version = '',
@@ -19,7 +19,6 @@ $dripBot = (function($, $dripBot, isPro) {
 	errorAlerted = false,
 	signupAlerted = false,
 	stage = '',
-	status = 'Stopped',
 	stopColor = '#e9656d',
 	startColor = '#47a447',
 	clickerPid = -1,
@@ -49,13 +48,14 @@ $dripBot = (function($, $dripBot, isPro) {
 	var versionChange = function() {
 		isUpdating = true;
 		clearInterval(getVersionPid);
+		getVersionPid = -1;
 		$('div#dripbot-update').css({
 			"display": "block"
 		});
 
-		if(isDripBotPro) {
-			setTimeout(function() { location.reload(); }, 10000);
-		}
+		setTimeout(function() {
+			$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');
+		}, 5000);
 	}
 
 	var getVersion = function() {
@@ -143,13 +143,9 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 	var rc4Rand = new Rc4Random((new Date()).toString());
 
-	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p><button id="toggle-auto-buy" class="btn" href="#" onclick=""></button></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
+	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p><button id="toggle-auto-buy" class="btn" href="#" onclick=""></button></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
 	var updateBox = '<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>';
-	if(isDripBotPro) {
-		updateBox += "You're Pro, so DripBot will automatically reload in 10 seconds...";
-	} else {
-		updateBox += "Please reload the page to apply new updates.";
-	}
+	updateBox += "DripBot will automatically update in 5 seconds...";
 	updateBox += '</p></div>'
 
 	var clickButton = $('a#btn-addMem'),
@@ -172,7 +168,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var updateTitleText = function() {
-		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage + ' (Status: ' + status + ')')
+		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage)
 	}
 
 	var startAutoBuy = function() {
@@ -324,7 +320,9 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var storeClickCallback = function() {
-		getNewTopThing();
+		if(started) {
+			getNewTopThing();
+		}
 	}
 
 	var getNewTopThing = function() {
@@ -608,30 +606,27 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var stop = function() {
-		if(!started) {
-			return;
-		} else {
-			started = false;
-			startOnLoad.set(false);
-			status = 'Stopped';
-		}
+		started = false;
+		popManager.newPop = popManager.oldNewPop;
+		clicking.obj = false;
+		autoBuy.obj = false;
 		clearInterval(getVersionPid);
 		clearInterval(stage1Pid);
 		clearInterval(stage2Pid);
 		clearInterval(stage3Pid);
 		clearInterval(clickerPid);
 		clearInterval(errorCheckPid);
+		clearTimeout(clickerPid);
 		getVersionPid = -1;
 		stage1Pid = -1;
 		stage2Pid = -1;
 		stage3Pid = -1;
-		stopClicking();
-		toggleClickButton();
-		autoBuy.set(false);
-		toggleAutoBuyButton(autoBuy.obj);
 		errorCheckPid = -1;
-		updateTitleText();
-		toggleStopButton(false);
+		$('div#dripbot').remove();
+		$('div#dripbot-update').remove();
+		if(topThing) {
+			topThing.ident.css({"background-color": ''});
+		}
 	}
 
 	var start = function() {
@@ -640,7 +635,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		} else {
 			started = true;
 			startOnLoad.set(true);
-			status = 'Running';
 		}
 		if (story.inProgress) {
 			stage = '1';
@@ -661,11 +655,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		if(!isUpdating) {
 			getVersionPid = setInterval(function() { getVersion(); }, 60000);
 		}
-	}
-
-	var restart = function() {
-		stop();
-		start();
 	}
 
 	var init = function() {
@@ -713,8 +702,6 @@ $dripBot = (function($, $dripBot, isPro) {
 		startAutoBuy: startAutoBuy,
 
 		stop: stop,
-		start: start,
-		restart: restart
 	};
 }(
 	$,
