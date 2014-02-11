@@ -35,7 +35,6 @@ $dripBot = (function($, $dripBot, isPro) {
 	topThing = null;
 
 	var versionCallback = function() {
-		console.log("Got a response: " + window.dsbversion);
 		if(initialVersion) {
 			version = window.dsbversion;
 			initialVersion = false;
@@ -629,7 +628,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		toggleStopButton(true);
 		errorCheckPid = setInterval(function() { checkForError(); }, 2000);
 		if(!isUpdating) {
-			getVersionPid = setInterval(function() { getVersion(); }, 5000);
+			getVersionPid = setInterval(function() { getVersion(); }, 60000);
 		}
 	}
 
