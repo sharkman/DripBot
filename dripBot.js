@@ -5,11 +5,14 @@ $dripBot = (function($, $dripBot, isPro) {
 		return $dripBot;
 	}
 
-	var version = '1.2',
+	var version = '',
+	initialVersion = true,
 	isDripBotPro = isPro,
+	isUpdating = false,
 	stage1Pid = -1,
 	stage2Pid = -1,
 	stage3Pid = -1,
+	getVersionPid = -1,
 	canBuy = true,
 	started = false,
 	errorCheckPid = -1,
@@ -30,6 +33,35 @@ $dripBot = (function($, $dripBot, isPro) {
 	MINUTE = 60 * 1000,
 	clicksTillBreak = 0,
 	topThing = null;
+
+	var versionCallback = function() {
+		console.log("Got a response: " + window.dsbversion);
+		if(initialVersion) {
+			version = window.dsbversion;
+			initialVersion = false;
+			updateTitleText();
+		} else {
+			if(version != window.dsbversion) {
+				versionChange();
+			}
+		}
+	}
+
+	var versionChange = function() {
+		isUpdating = true;
+		clearInterval(getVersionPid);
+		$('div#dripbot-update').css({
+			"display": "block"
+		});
+
+		if(isDripBotPro) {
+			setTimeout(function() { location.reload(); }, 10000);
+		}
+	}
+
+	var getVersion = function() {
+		$.getScript('https://raw.github.com/apottere/DripBot/master/version.js', versionCallback);
+	}
 
 	var getTopThing = function() {
 		return topThing;
@@ -112,6 +144,13 @@ $dripBot = (function($, $dripBot, isPro) {
 	var rc4Rand = new Rc4Random((new Date()).toString());
 
 	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
+	var updateBox = '<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>';
+	if(isDripBotPro) {
+		updateBox += "You're Pro, so DripBot will automatically reload in 10 seconds...";
+	} else {
+		updateBox += "Please reload the page to apply new updates.";
+	}
+	updateBox += '</p></div>'
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
@@ -551,11 +590,13 @@ $dripBot = (function($, $dripBot, isPro) {
 			startOnLoad.set(false);
 			status = 'Stopped';
 		}
+		clearInterval(getVersionPid);
 		clearInterval(stage1Pid);
 		clearInterval(stage2Pid);
 		clearInterval(stage3Pid);
 		clearInterval(clickerPid);
 		clearInterval(errorCheckPid);
+		getVersionPid = -1;
 		stage1Pid = -1;
 		stage2Pid = -1;
 		stage3Pid = -1;
@@ -587,6 +628,9 @@ $dripBot = (function($, $dripBot, isPro) {
 		updateTitleText();
 		toggleStopButton(true);
 		errorCheckPid = setInterval(function() { checkForError(); }, 2000);
+		if(!isUpdating) {
+			getVersionPid = setInterval(function() { getVersion(); }, 5000);
+		}
 	}
 
 	var restart = function() {
@@ -595,6 +639,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var init = function() {
+		getVersion();
 		$('div#upgrades').css({"height":"auto"});
 		document.hasFocus = function() { return true; };
 		AnonymousUserManager.canDrip = function() { return true; };
@@ -604,8 +649,10 @@ $dripBot = (function($, $dripBot, isPro) {
 				popManager.oldNewPop(e,t,a);
 			}
 		}
+		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
+		getVersion();
 		updateTitleText();
 		toggleStopButton(started);
 		getNewClicksTillBreak();
@@ -631,6 +678,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		stopClicking: stopClicking,
 
 		getTopThing: getTopThing,
+		versionCallback: versionCallback,
 
 		stop: stop,
 		start: start,
