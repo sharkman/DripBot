@@ -25,7 +25,8 @@ $('img#dripbot-logo').css({
 });
 
 $('div#dripbot-update').css({
-	"background-color": "#e9656d"
+	"background-color": "#47a447",
+	"padding": "10px"
 });
 
 $('div#dripbot-update h1').css({
