@@ -97,7 +97,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var startOnLoad = new Save('startOnLoad', true);
 	var clicking = new Save('clicking', false);
-	var autoBuy = new Save('autoBuy', true);
+	var autoBuy = new Save('autoBuy', false);
 
 	function Rc4Random(seed) {
 		var keySchedule = [];
