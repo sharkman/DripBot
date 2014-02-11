@@ -97,6 +97,7 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var startOnLoad = new Save('startOnLoad', true);
 	var clicking = new Save('clicking', false);
+	var autoBuy = new Save('autoBuy', true);
 
 	function Rc4Random(seed) {
 		var keySchedule = [];
@@ -142,7 +143,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 	var rc4Rand = new Rc4Random((new Date()).toString());
 
-	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
+	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><button id="dripbot-toggle" class="btn" href="#" onclick=""></button><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p><button id="toggle-auto-buy" class="btn" href="#" onclick=""></button></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
 	var updateBox = '<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>';
 	if(isDripBotPro) {
 		updateBox += "You're Pro, so DripBot will automatically reload in 10 seconds...";
@@ -172,6 +173,20 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var updateTitleText = function() {
 		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage + ' (Status: ' + status + ')')
+	}
+
+	var startAutoBuy = function() {
+		autoBuy.set(true);
+		toggleAutoBuyButton(autoBuy.obj);
+	}
+
+	var stopAutoBuy = function() {
+		autoBuy.set(false);
+		toggleAutoBuyButton(autoBuy.obj);
+	}
+
+	var toggleAutoBuyButton = function(toggle) {
+		toggleButton(toggle, $('#toggle-auto-buy'), 'stopAutoBuy()', 'startAutoBuy()');
 	}
 
 	var toggleClickButton = function() {
@@ -308,10 +323,12 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 	}
 
+	var storeClickCallback = function() {
+		getNewTopThing();
+	}
+
 	var getNewTopThing = function() {
-		if(topThing !== null) {
-			topThing.ident.css({'background-color': ''});
-		}
+		var oldTopThing = topThing;
 		topThing = null;
 		localStats.specialUpgrades.forEach(function(u) {
 			if(!u._purchased && u.available) {
@@ -321,13 +338,18 @@ $dripBot = (function($, $dripBot, isPro) {
 		if(topThing == null) {
 			topThing = sortOTBList(getOTBList())[0];
 		}
-		updateNextPurchase(topThing);
-		if(topThing.isUpgrade) {
-			setTimeout(function() {
+		if(!oldTopThing || topThing.item.name !== oldTopThing.item.name) {
+			if(oldTopThing !== null) {
+				oldTopThing.ident.css({'background-color': ''});
+			}
+			updateNextPurchase(topThing);
+			if(topThing.isUpgrade) {
+				setTimeout(function() {
+					topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+				}, 200);
+			} else {
 				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
-			}, 300);
-		} else {
-			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+			}
 		}
 	}
 
@@ -452,103 +474,107 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var stage1 = function() {
-		if(story.state == 6) {
-			drip();
-		}
+		if(autoBuy.obj) {
+			if(story.state == 6) {
+				drip();
+			}
 
-		if(story.state == 9) {
-			buyPowerup('Cursor');
-		}
+			if(story.state == 9) {
+				buyPowerup('Cursor');
+			}
 
-		if(story.state == 11) {
-			buyUpgrade('Enhanced Precision');
-		}
+			if(story.state == 11) {
+				buyUpgrade('Enhanced Precision');
+			}
 
-		if(story.state == 12) {
-			stage = '2';
-			clearInterval(stage1Pid);
-			stage2Pid = setInterval(function() { stage2(); }, 500);
-			updateTitleText();
-			return;
-		}
+			if(story.state == 12) {
+				stage = '2';
+				clearInterval(stage1Pid);
+				stage2Pid = setInterval(function() { stage2(); }, 500);
+				updateTitleText();
+				return;
+			}
 
-		if(story.state != 12 && atMaxBytes()) {
-			drip();
+			if(story.state != 12 && atMaxBytes()) {
+				drip();
+			}
 		}
 	}
 
 	var stage2 = function() {
-		if(atBPSCap()) {
-			stage = '3';
-			topThing = null;
-			clearInterval(stage2Pid);
-			stage3Pid = setInterval(function() { stage3(); }, 1000);
-			updateTitleText();
-			return;
-		}
+		if(autoBuy.obj) {
+			if(atBPSCap()) {
+				stage = '3';
+				topThing = null;
+				clearInterval(stage2Pid);
+				stage3Pid = setInterval(function() { stage3(); }, 1000);
+				updateTitleText();
+				return;
+			}
 
-		if(topThing == null) {
-			getNewTopThing();
-		}
-
-		if(getBytes() >= topThing.realPrice) {
-			if(canBuy) {
-				if(topThing.isUpgrade) {
-					buyUpgrade(topThing.item.name);
-				} else {
-					buyPowerup(topThing.item.name);
-				}
-				canBuy = false;
-				setTimeout(function() { canBuy = true; }, 800);
-
+			if(topThing == null) {
 				getNewTopThing();
 			}
-		} else {
-			if(getCapacity() < topThing.realPrice) {
-				if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
-					drip();
+
+			if(getBytes() >= topThing.realPrice) {
+				if(canBuy) {
+					if(topThing.isUpgrade) {
+						buyUpgrade(topThing.item.name);
+					} else {
+						buyPowerup(topThing.item.name);
+					}
+					canBuy = false;
+					setTimeout(function() { canBuy = true; }, 800);
 				}
-			}
-        }
+			} else {
+				if(getCapacity() < topThing.realPrice) {
+					if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
+						drip();
+					}
+				}
+	        }
+	    }
 	}
 
 	var stage3 = function() { 
-		if(!atBPSCap()) {
-			stage = '2';
-			currentLeader = null;
-			timeOfLeaderChange = null;
-			clearInterval(stage3Pid);
-			stage2Pid = setInterval(function() { stage2(); }, 500);
-			updateTitleText();
-			return;
-		}
-
-		var leaderName = getLeader();
-		if(!currentLeader) {
-			currentLeader = getMyName();
-		}
-
-		if (leaderName != getMyName()) {
-			if(currentLeader == getMyName()) {
-				currentLeader = leaderName;
-				timeOfLeaderChange = $.now();
-				console.log("As of " + timeOfLeaderChange + " there is one fairer in the land... it is '" + leaderName + "'.");
-
-			} else if(leaderName != currentLeader) {
-				console.log("Leader changed from '" + currentLeader + "' to '" + leaderName + "'.");
-				currentLeader = leaderName;
-			}
-			drip();
-
-		} else {
-			if (currentLeader != leaderName) {
-				currentLeader = leaderName;
-				var diffTime = $.time;
-				console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
+		if(autoBuy.obj) {
+			if(!atBPSCap()) {
+				stage = '2';
+				currentLeader = null;
+				timeOfLeaderChange = null;
+				clearInterval(stage3Pid);
+				stage2Pid = setInterval(function() { stage2(); }, 500);
+				updateTitleText();
+				return;
 			}
 
-			if(!benevolentLeader) {
+			var leaderName = getLeader();
+			if(!currentLeader) {
+				currentLeader = getMyName();
+			}
+
+			if (leaderName != getMyName()) {
+				if(currentLeader == getMyName()) {
+					currentLeader = leaderName;
+					timeOfLeaderChange = $.now();
+					console.log("As of " + timeOfLeaderChange + " there is one fairer in the land... it is '" + leaderName + "'.");
+
+				} else if(leaderName != currentLeader) {
+					console.log("Leader changed from '" + currentLeader + "' to '" + leaderName + "'.");
+					currentLeader = leaderName;
+				}
 				drip();
+
+			} else {
+				if (currentLeader != leaderName) {
+					currentLeader = leaderName;
+					var diffTime = $.time;
+					console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
+				}
+
+				if(!benevolentLeader) {
+					drip();
+				}
 			}
 		}
 	}
@@ -601,6 +627,8 @@ $dripBot = (function($, $dripBot, isPro) {
 		stage3Pid = -1;
 		stopClicking();
 		toggleClickButton();
+		autoBuy.set(false);
+		toggleAutoBuyButton(autoBuy.obj);
 		errorCheckPid = -1;
 		updateTitleText();
 		toggleStopButton(false);
@@ -626,7 +654,10 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 		updateTitleText();
 		toggleStopButton(true);
-		errorCheckPid = setInterval(function() { checkForError(); }, 2000);
+		toggleAutoBuyButton(autoBuy.obj);
+		if(errorCheckPid == -1) {
+			errorCheckPid = setInterval(function() { checkForError(); }, 2000);
+		}
 		if(!isUpdating) {
 			getVersionPid = setInterval(function() { getVersion(); }, 60000);
 		}
@@ -650,10 +681,12 @@ $dripBot = (function($, $dripBot, isPro) {
 		}
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
+		$('div#storeColumn').click(function() { storeClickCallback(); });
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
 		getVersion();
 		updateTitleText();
 		toggleStopButton(started);
+		toggleAutoBuyButton(autoBuy.obj);
 		getNewClicksTillBreak();
 		updateClickInterval();
 		toggleClickButton();
@@ -676,8 +709,8 @@ $dripBot = (function($, $dripBot, isPro) {
 		startClicking: startClicking,
 		stopClicking: stopClicking,
 
-		getTopThing: getTopThing,
-		versionCallback: versionCallback,
+		stopAutoBuy: stopAutoBuy,
+		startAutoBuy: startAutoBuy,
 
 		stop: stop,
 		start: start,
