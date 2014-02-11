@@ -20,7 +20,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	stopColor = '#e9656d',
 	startColor = '#47a447',
 	clickerPid = -1,
-	clickInterval = 500,
+	clickInterval = 100,
 	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
@@ -28,7 +28,7 @@ $dripBot = (function($, $dripBot, isPro) {
 	benevolentLeader = false,
 	showPops = true,
 	MINUTE = 60 * 1000,
-	longWaitPercent = 0.99,
+	clicksTillBreak = 0,
 	topThing = null;
 
 	var getTopThing = function() {
@@ -171,7 +171,13 @@ $dripBot = (function($, $dripBot, isPro) {
 	}
 
 	var updateClickInterval = function() {
-		$('#click-interval p').text("Next click in: " + clickInterval + 'ms');
+		if(clickInterval < 60000) {
+			$('#click-interval p').text("Next click in: " + clickInterval + 'ms.  Clicks till next break: ' + clicksTillBreak);
+		} else {
+			var minutes = Math.floor(clickInterval / MINUTE);
+			var seconds = Math.floor((clickInterval - minutes * MINUTE) / 1000);
+			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksTillBreak);
+		}
 	}
 
 	function OTB(o, upgrade) {
@@ -390,6 +396,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		if(!clicking.obj && clickerPid == -1) {
 			clicking.set(true);
 			clickInterval = getNewClickTimeout();
+			getNewClicksTillBreak();
 			updateClickInterval();
 			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
 			toggleClickButton();
@@ -510,13 +517,18 @@ $dripBot = (function($, $dripBot, isPro) {
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
-		if(temp >= longWaitPercent) {
+		if(clicksTillBreak < 1) {
 			temp = temp * 3 * MINUTE + 4 * MINUTE;
+			getNewClicksTillBreak();
 		} else {
-			temp =  temp * 500 + 500;
+			temp = temp * 50 + 100;
+			clicksTillBreak -= 1;
 		}
-
 		return Math.floor(temp);
+	}
+
+	var getNewClicksTillBreak = function() {
+		clicksTillBreak = Math.floor(rc4Rand.getRandomNumber() * 500 + 2200);
 	}
 
 	var smartChainClick = function() {
@@ -596,6 +608,7 @@ $dripBot = (function($, $dripBot, isPro) {
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
 		updateTitleText();
 		toggleStopButton(started);
+		getNewClicksTillBreak();
 		updateClickInterval();
 		toggleClickButton();
 		clickCup();
