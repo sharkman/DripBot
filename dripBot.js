@@ -30,7 +30,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	benevolentLeader = false,
 	showPops = true,
 	MINUTE = 60 * 1000,
-	clicksTillBreak = 0,
 	topThing = null;
 
 	var versionCallback = function() {
@@ -96,6 +95,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var clicking = new Save('clicking', false);
+	var clicksLeft = new Save('clicksLeft', 2000);
 	var autoBuy = new Save('autoBuy', false);
 
 	function Rc4Random(seed) {
@@ -220,11 +220,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var updateClickInterval = function() {
 		if(clickInterval < 60000) {
-			$('#click-interval p').text("Next click in: " + clickInterval + 'ms.  Clicks till next break: ' + clicksTillBreak);
+			$('#click-interval p').text("Next click in: " + clickInterval + 'ms.  Clicks till next break: ' + clicksLeft.obj);
 		} else {
 			var minutes = Math.floor(clickInterval / MINUTE);
 			var seconds = Math.floor((clickInterval - minutes * MINUTE) / 1000);
-			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksTillBreak);
+			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksLeft.obj);
 		}
 	}
 
@@ -578,18 +578,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
-		if(clicksTillBreak < 1) {
+		if(clicksLeft.obj < 1) {
 			temp = temp * 3 * MINUTE + 7 * MINUTE;
 			getNewClicksTillBreak();
 		} else {
 			temp = temp * 50 + 100;
-			clicksTillBreak -= 1;
+			clicksLeft.set(clicksLeft.obj - 1);
 		}
 		return Math.floor(temp);
 	}
 
 	var getNewClicksTillBreak = function() {
-		clicksTillBreak = Math.floor(rc4Rand.getRandomNumber() * 500 + 2200);
+		clicksLeft.set(Math.floor(rc4Rand.getRandomNumber() * 500 + 2200));
 	}
 
 	var smartChainClick = function() {
@@ -680,7 +680,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 		updateTitleText();
 		toggleStopButton(started);
 		toggleAutoBuyButton(autoBuy.obj);
-		getNewClicksTillBreak();
 		updateClickInterval();
 		toggleClickButton();
 		clickCup();
