@@ -685,8 +685,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		toggleClickButton();
 		clickCup();
 		// Emergency clicks, sometimes game stalls.
-		setTimeout(function() { clickClup(); }, 2000);
-		setTimeout(function() { clickClup(); }, 5000);
+		setTimeout(function() { clickCup(); }, 2000);
+		setTimeout(function() { clickCup(); }, 5000);
 		setTimeout(function() { start(); }, 500);
 
 		if(clicking.obj) {
