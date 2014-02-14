@@ -640,9 +640,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 		} else if(!atBPSCap()) {
 			stage = '2';
 			stage2Pid = setInterval(function() { stage2(); }, 500);
+			getNewTopThing();
 		} else {
 			stage = '3';
 			stage3Pid = setInterval(function() { stage3(); }, 1000);
+			getNewTopThing();
 		}
 		updateTitleText();
 		toggleStopButton(true);
