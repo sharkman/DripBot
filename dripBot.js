@@ -95,7 +95,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 	}
 
-	var startOnLoad = new Save('startOnLoad', true);
 	var clicking = new Save('clicking', false);
 	var autoBuy = new Save('autoBuy', false);
 
@@ -634,7 +633,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 			return;
 		} else {
 			started = true;
-			startOnLoad.set(true);
 		}
 		if (story.inProgress) {
 			stage = '1';
@@ -658,6 +656,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var init = function() {
+		try {
+			localStorage.removeItem('dsb.startOnLoad');
+		} catch(ignore) {}
+
 		getVersion();
 		$('div#upgrades').css({"height":"auto"});
 		document.hasFocus = function() { return true; };
@@ -680,9 +682,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		updateClickInterval();
 		toggleClickButton();
 		clickCup();
-		if(startOnLoad.obj) {
-			setTimeout(function() { start(); }, 500);
-		}
+		setTimeout(function() { start(); }, 500);
+
 		if(clicking.obj) {
 			smartChainClick();
 		}
