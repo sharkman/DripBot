@@ -300,6 +300,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
 
+	$('div#leaderBoard table tbody tr').append('<td class="leader-diff"></td>')
+
 	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
 	var checkForError = function() {
@@ -778,6 +780,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		$('div#dripbot').remove();
 		$('div#dripbot-update').remove();
 		$('div#globalInfo h3 button').remove();
+		$('div#leaderBoard table tbody tr td.leader-diff').remove();
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
