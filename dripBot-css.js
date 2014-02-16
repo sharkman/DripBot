@@ -34,7 +34,11 @@ $('div#dripbot-update h1').css({
 });
 
 $('#save-game').css({
-	"background-color": "#47a447",
+	"background-color": "#5cb85c",
 	"color": "white",
 	"margin-left": "20px"
-})
+});
+
+$('div#leaderBoard table tbody tr td.leader-diff').css({
+	"color": "#47a447"
+});
