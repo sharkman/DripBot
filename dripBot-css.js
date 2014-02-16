@@ -33,7 +33,7 @@ $('div#dripbot-update h1').css({
 	"font-weight": "800",
 });
 
-$('#save-button').css({
+$('#save-game').css({
 	"background-color": "#47a447",
 	"color": "white",
 	"margin-left": "20px"
