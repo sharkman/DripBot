@@ -1,3 +1,5 @@
+Highcharts.setOptions({colors:["#DDDF0D","#7798BF","#55BF3B","#DF5353","#aaeeee","#ff0066","#eeaaee","#55BF3B","#DF5353","#7798BF","#aaeeee"],chart:{backgroundColor:{linearGradient:[0,0,0,400],stops:[[0,"rgb(96, 96, 96)"],[1,"rgb(16, 16, 16)"]]},borderWidth:0,borderRadius:15,plotBackgroundColor:null,plotShadow:false,plotBorderWidth:0},title:{style:{color:"#FFF",font:"16px Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif"}},subtitle:{style:{color:"#DDD",font:"12px Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif"}},xAxis:{gridLineWidth:0,lineColor:"#999",tickColor:"#999",labels:{style:{color:"#999",fontWeight:"bold"}},title:{style:{color:"#AAA",font:"bold 12px Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif"}}},yAxis:{alternateGridColor:null,minorTickInterval:null,gridLineColor:"rgba(255, 255, 255, .1)",lineWidth:0,tickWidth:0,labels:{style:{color:"#999",fontWeight:"bold"}},title:{style:{color:"#AAA",font:"bold 12px Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif"}}},legend:{itemStyle:{color:"#CCC"},itemHoverStyle:{color:"#FFF"},itemHiddenStyle:{color:"#333"}},credits:{style:{right:"50px"}},labels:{style:{color:"#CCC"}},tooltip:{backgroundColor:{linearGradient:[0,0,0,50],stops:[[0,"rgba(96, 96, 96, .8)"],[1,"rgba(16, 16, 16, .8)"]]},borderWidth:0,style:{color:"#FFF"}},plotOptions:{line:{dataLabels:{color:"#CCC"},marker:{lineColor:"#333"}},spline:{marker:{lineColor:"#333"}},scatter:{marker:{lineColor:"#333"}}},toolbar:{itemStyle:{color:"#CCC"}}})
+
 $dripBot = (function($, oldDripBot, isPro) {
 
 	if(oldDripBot instanceof Object) {
@@ -23,6 +25,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 	startColor = '#47a447',
 	clickerPid = -1,
 	clickInterval = 100,
+	clickPointCount = 0,
+	clicksPerSecond = 0,
+	clicksPerSecondCMA = 0,
+	CPSPid = -1,
+	CPSChart = null,
 	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
@@ -31,6 +38,89 @@ $dripBot = (function($, oldDripBot, isPro) {
 	showPops = true,
 	MINUTE = 60 * 1000,
 	topThing = null;
+
+	var incrementCPS = function() {
+		clicksPerSecond++;
+	};
+
+	var calculateCPSCMA = function(cps) {
+		return cps + 2;
+	};
+
+	var createCPSChart = function() {
+		CPSChart = new Highcharts.Chart({
+		    chart: {
+		        type: "line",
+		        renderTo: "clickTab",
+		        animation: Highcharts.svg, // don't animate in old IE
+		        marginRight: 10,
+		        width: 516
+		    },
+		    title: {
+		        text: 'Clicks Per Second'
+		    },
+		    xAxis: {
+		        type: 'datetime',
+		        tickPixelInterval: 100
+		    },
+		    yAxis: {
+		        title: {
+		            text: 'CPS'
+		        },
+		        plotLines: [{
+		            value: 0,
+		            width: 1,
+		            color: '#808080'
+		        }],
+		        max: 20
+		    },
+		    tooltip: {
+		        valueSuffix: ' CPS'
+		    },
+		    legend: {
+		        layout: 'horizontal',
+		        align: 'center',
+		        verticalAlign: 'bottom',
+		        borderWidth: 1
+		    },
+		    series: [{
+		        name: 'Actual',
+		        data: []
+		    }, {
+		        name: 'Running Average',
+		        data: []
+		    }]
+		});
+
+		CPSPid = setInterval(
+            function() {
+                var series = CPSChart.series;
+                var shift = true;
+                if(clickPointCount < 60) {
+                    clickPointCount++;
+                    shift = false;
+                }
+                var x = (new Date()).getTime();
+
+                clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
+                series[0].addPoint([x, clicksPerSecond], true, shift);
+                series[1].addPoint([x, clicksPerSecondCMA], true, shift);
+                clicksPerSecond = 0;
+
+	        },
+	        1000
+		);
+	}
+
+	var destroyCPSChart = function() {
+		clearInterval(CPSPid);
+		CPSPid = -1;
+		$('li#clicks').remove();
+		$('div#clickTab').remove();
+		if(CPSChart !== null) {
+			CPSChart.destroy();
+		}
+	}
 
 	var versionCallback = function() {
 		if(initialVersion) {
@@ -146,6 +236,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var updateBox = '<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>';
 	updateBox += "DripBot will automatically update in 5 seconds...";
 	updateBox += '</p></div>'
+
+	var chartTab = $('#dripChartTab');
+	chartTab.append('<li id="clicks"><a href="#clickTab" data-toggle="tab">Clicks</a></li>');
+
+	vat tabContent = $('div#globalInfo div.row div.tab-content');
+	tabContent.append('<div id="clickTab" class="tab-pane"></div>');
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
@@ -621,6 +717,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		stage2Pid = -1;
 		stage3Pid = -1;
 		errorCheckPid = -1;
+		destroyCPSChart();
 		$('div#dripbot').remove();
 		$('div#dripbot-update').remove();
 		if(topThing) {
@@ -649,6 +746,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		updateTitleText();
 		toggleStopButton(true);
 		toggleAutoBuyButton(autoBuy.obj);
+		createCPSChart();
 		if(errorCheckPid == -1) {
 			errorCheckPid = setInterval(function() { checkForError(); }, 2000);
 		}
