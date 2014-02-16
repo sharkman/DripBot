@@ -437,7 +437,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var storeClickCallback = function() {
-		console.log("Calling back new top thing.");
 		if(started) {
 			getNewTopThing();
 		}
