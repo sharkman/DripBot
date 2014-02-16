@@ -279,6 +279,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
 
+	$('div#globalInfo h3').append('<button id="save-game" class="btn">Save Game</button>')
+
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
 			signupAlerted = true;
@@ -753,6 +755,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		destroyCPSChart();
 		$('div#dripbot').remove();
 		$('div#dripbot-update').remove();
+		$('div#globalInfo h3 button').remove();
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
