@@ -45,7 +45,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var save = function() {
 		DataSaver.saveData();
-		DataSaver.fetchLeaderBoard();
+		DataSaver.fetchLeaderboard();
 	}
 
 	var incrementCPS = function() {
