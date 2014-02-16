@@ -780,7 +780,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 		popManager.oldNewPop = popManager.newPop;
 		popManager.newPop = function(e, t, a) {
 			if(showPops || (e.indexOf('addMem') == -1 && e != 'chartContainer')) {
-				popManager.oldNewPop(e,t,a);
+				if(!$('div#clickTab').is(':visible')) {
+					popManager.oldNewPop(e,t,a);
+				}
 			}
 		}
 		$('div#middleColumn').prepend(updateBox);
