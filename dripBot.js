@@ -63,12 +63,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var createCPSChart = function() {
 		CPSChart = new Highcharts.Chart({
+			plotOptions: {
+				series: {
+					animation: false
+				}
+			},
 		    chart: {
 		        type: "line",
 		        renderTo: "clickTab",
 		        animation: Highcharts.svg, // don't animate in old IE
 		        marginRight: 10,
-		        width: 516
+		        width: 516,
+		        animation: false
 		    },
 		    title: {
 		        text: 'Clicks Per Second'
