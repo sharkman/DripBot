@@ -28,8 +28,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 	clickPointCount = 0,
 	clicksPerSecond = 0,
 	clicksPerSecondCMA = 0,
+	CPSCMACount = 0,
 	CPSPid = -1,
 	CPSChart = null,
+	CPSChartLength = 30,
 	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
@@ -44,7 +46,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	};
 
 	var calculateCPSCMA = function(cps) {
-		return cps + 2;
+		return (cps + CPSCMACount * clicksPerSecondCMA) / (CPSCMACount + 1);
 	};
 
 	var createCPSChart = function() {
@@ -72,6 +74,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		            width: 1,
 		            color: '#808080'
 		        }],
+		        min: 0,
 		        max: 20
 		    },
 		    tooltip: {
@@ -96,12 +99,13 @@ $dripBot = (function($, oldDripBot, isPro) {
             function() {
                 var series = CPSChart.series;
                 var shift = true;
-                if(clickPointCount < 60) {
+                if(clickPointCount < CPSChartLength) {
                     clickPointCount++;
                     shift = false;
                 }
                 var x = (new Date()).getTime();
 
+				CPSCMACount++;
                 clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
                 series[0].addPoint([x, clicksPerSecond], true, shift);
                 series[1].addPoint([x, clicksPerSecondCMA], true, shift);
@@ -725,6 +729,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 
 		clickButton.unbind('click', incrementCPS);
+		$('ul#dripChartTab').children().first().children('a').click();
 	}
 
 	var start = function() {
