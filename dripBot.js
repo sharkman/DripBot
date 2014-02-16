@@ -723,6 +723,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
+
+		clickButton.unbind('click', incrementCPS);
 	}
 
 	var start = function() {
@@ -785,6 +787,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		setTimeout(function() { clickCup(); }, 2000);
 		setTimeout(function() { clickCup(); }, 5000);
 		setTimeout(function() { start(); }, 500);
+
+		clickButton.click(incrementCPS);
 
 		if(clicking.obj) {
 			smartChainClick();
