@@ -759,6 +759,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		$('div#storeColumn').unbind('click', storeClickCallback);
 		started = false;
 		popManager.newPop = popManager.oldNewPop;
+		LeaderBoardUI.createLeaderboardTable = LeaderBoardUI.oldCreateLeaderboardTable;
 		clicking.obj = false;
 		autoBuy.obj = false;
 		clearInterval(getVersionPid);
