@@ -240,7 +240,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var chartTab = $('#dripChartTab');
 	chartTab.append('<li id="clicks"><a href="#clickTab" data-toggle="tab">Clicks</a></li>');
 
-	vat tabContent = $('div#globalInfo div.row div.tab-content');
+	var tabContent = $('div#globalInfo div.row div.tab-content');
 	tabContent.append('<div id="clickTab" class="tab-pane"></div>');
 
 	var clickButton = $('a#btn-addMem'),
