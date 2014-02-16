@@ -39,6 +39,3 @@ $('#save-game').css({
 	"margin-left": "20px"
 });
 
-$('div#leaderBoard table tbody tr td.leader-diff').css({
-	"color": "#47a447"
-});
