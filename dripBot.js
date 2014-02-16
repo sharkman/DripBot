@@ -45,6 +45,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 		clicksPerSecond++;
 	};
 
+	var incrementCPSCMACount = function() {
+		if(CPSCMACount < 60) {
+			CPSCMACount++;
+		}
+	}
+
 	var calculateCPSCMA = function(cps) {
 		return (cps + CPSCMACount * clicksPerSecondCMA) / (CPSCMACount + 1);
 	};
@@ -105,7 +111,7 @@ $dripBot = (function($, oldDripBot, isPro) {
                 }
                 var x = (new Date()).getTime();
 
-				CPSCMACount++;
+                incrementCPSCMACount();
                 clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
                 series[0].addPoint([x, clicksPerSecond], true, shift);
                 series[1].addPoint([x, clicksPerSecondCMA], true, shift);
@@ -793,6 +799,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		setTimeout(function() { clickCup(); }, 5000);
 		setTimeout(function() { start(); }, 500);
 
+		$('li#clicks a').click();
 		clickButton.click(incrementCPS);
 
 		if(clicking.obj) {
