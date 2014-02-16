@@ -43,10 +43,20 @@ $dripBot = (function($, oldDripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
-	var updateLeaderBoard = function(t) {
+	var addDiffsToLB = function(lb) {
+		if(lb) {
+			var myscore;
+			if(lb.length > 2) {
+				myscore = lb[2].score;
+			}
+		}
+	}
+
+	var updateLeaderBoard = function(lb) {
 		console.log("Updating leaderboard");
-		console.log(t);
-		LeaderBoardUI.oldCreateLeaderboardTable(t);
+		console.log(lb);
+		LeaderBoardUI.oldCreateLeaderboardTable(lb);
+		addDiffsToLB(lb);
 	}
 
 	var save = function() {
