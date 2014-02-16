@@ -28,6 +28,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	clickPointCount = 0,
 	clicksPerSecond = 0,
 	clicksPerSecondCMA = 0,
+	CPSCMALongCount = 0,
+	CPSCMALong = 0,
 	CPSCMACount = 0,
 	CPSPid = -1,
 	CPSChart = null,
@@ -54,6 +56,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var calculateCPSCMA = function(cps) {
 		return (cps + CPSCMACount * clicksPerSecondCMA) / (CPSCMACount + 1);
 	};
+
+	var calculateCPSCMALong = function(cps) {
+		return (cps + CPSCMALongCount * CPSCMALong) / (CPSCMALongCount + 1);
+	}
 
 	var createCPSChart = function() {
 		CPSChart = new Highcharts.Chart({
@@ -96,8 +102,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 		        name: 'Actual',
 		        data: []
 		    }, {
-		        name: 'Running Average',
+		        name: 'Short Running Average',
 		        data: []
+		    }, {
+		    	name: 'Long Running Average',
+		    	data: []
 		    }]
 		});
 
@@ -112,9 +121,12 @@ $dripBot = (function($, oldDripBot, isPro) {
                 var x = (new Date()).getTime();
 
                 incrementCPSCMACount();
+                CPSCMALongCount++;
+                CPSCMALong = calculateCPSCMALong();
                 clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
                 series[0].addPoint([x, clicksPerSecond], true, shift);
                 series[1].addPoint([x, clicksPerSecondCMA], true, shift);
+                series[3].addPoint([x, CPSCMALong], true, shift);
                 clicksPerSecond = 0;
 
 	        },
@@ -780,9 +792,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 		popManager.oldNewPop = popManager.newPop;
 		popManager.newPop = function(e, t, a) {
 			if(showPops || (e.indexOf('addMem') == -1 && e != 'chartContainer')) {
-				if(!$('div#clickTab').is(':visible')) {
-					popManager.oldNewPop(e,t,a);
+				if(e === 'chartContainer' && $('div#clickTab').is(':visible')) {
+					return
 				}
+				popManager.oldNewPop(e,t,a);
 			}
 		}
 		$('div#middleColumn').prepend(updateBox);
