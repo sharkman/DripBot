@@ -46,7 +46,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var updateLeaderBoard = function(t) {
 		console.log("Updating leaderboard");
 		console.log(t);
-		LeaderBoardUI.oldCreateLeaderboard(t);
+		LeaderBoardUI.oldCreateLeaderboardTable(t);
 	}
 
 	var save = function() {
@@ -823,8 +823,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 				popManager.oldNewPop(e,t,a);
 			}
 		}
-		LeaderBoardUI.oldCreateLeaderboard = LeaderBoardUI.createLeaderboard;
-		LeaderBoardUI.createLeaderboard = updateLeaderBoard;
+		LeaderBoardUI.oldCreateLeaderboardTable = LeaderBoardUI.createLeaderboardTable;
+		LeaderBoardUI.createLeaderboardTable = updateLeaderBoard;
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
 		$('div#storeColumn').click(storeClickCallback);
