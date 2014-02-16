@@ -43,6 +43,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
+	var updateLeaderBoard = function(t) {
+		console.log("Updating leaderboard");
+		console.log(t);
+		LeaderBoardUI.oldCreateLeaderboard(t);
+	}
+
 	var save = function() {
 		DataSaver.saveData();
 		DataSaver.fetchLeaderboard();
@@ -817,6 +823,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 				popManager.oldNewPop(e,t,a);
 			}
 		}
+		LeaderBoardUI.oldCreateLeaderboard = LeaderBoardUI.createLeaderboard;
+		LeaderBoardUI.createLeaderboard = updateLeaderBoard;
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
 		$('div#storeColumn').click(storeClickCallback);
