@@ -823,6 +823,15 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 	}
 
+	var purge = function() {
+		stop();
+		['dsb.startOnLoad', 'dsb.clicking', 'dsb.clicksLeft', 'dsb.autoBuy'].forEach(function(e) {
+			try {
+				localStorage.removeItem(e);
+			} catch(ignore) {}
+		})
+	}
+
 	init();
 
 	return {
@@ -837,6 +846,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		startAutoBuy: startAutoBuy,
 
 		stop: stop,
+		purge: purge
 	};
 }(
 	$,
