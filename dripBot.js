@@ -126,7 +126,7 @@ $dripBot = (function($, oldDripBot, isPro) {
                 clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
                 series[0].addPoint([x, clicksPerSecond], true, shift);
                 series[1].addPoint([x, clicksPerSecondCMA], true, shift);
-                series[3].addPoint([x, CPSCMALong], true, shift);
+                series[2].addPoint([x, CPSCMALong], true, shift);
                 clicksPerSecond = 0;
 
 	        },
