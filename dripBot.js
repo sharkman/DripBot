@@ -437,6 +437,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var storeClickCallback = function() {
+		console.log("Calling back new top thing.");
 		if(started) {
 			getNewTopThing();
 		}
@@ -723,6 +724,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var stop = function() {
+		$('div#storeColumn').unbind('click', storeClickCallback);
 		started = false;
 		popManager.newPop = popManager.oldNewPop;
 		clicking.obj = false;
@@ -800,7 +802,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
-		$('div#storeColumn').click(function() { storeClickCallback(); });
+		$('div#storeColumn').click(storeClickCallback);
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
 		getVersion();
 		updateTitleText();
