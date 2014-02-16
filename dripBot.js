@@ -43,12 +43,30 @@ $dripBot = (function($, oldDripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
+	var beautify = function(e) {
+		return NumUtils.byteConvert(e, 3);
+	}
+
 	var addDiffsToLB = function(lb) {
 		if(lb) {
 			var myscore;
 			if(lb.length > 2) {
 				myscore = lb[2].score;
+			} else {
+				myscore = lb[1].score;
 			}
+
+			var diffs = $('div#leaderBoard table tbody tr td.leader-diff');
+			if(diffs.length <= 0) {
+				$('div#leaderBoard table tbody tr').append('<td class="leader-diff"></td>')
+				diffs = $('div#leaderBoard table tbody tr td.leader-diff');
+			}
+
+			var i = 0;
+			lb.forEach(function(e) {
+				diffs.eq(i).text('(+ ' + beautify(e.score - myscore) + ')');
+				i++;
+			});
 		}
 	}
 
@@ -59,9 +77,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 		addDiffsToLB(lb);
 	}
 
+	var getLeaderBoard = function() {
+		DataSaver.fetchLeaderboard();
+	}
+
 	var save = function() {
 		DataSaver.saveData();
-		DataSaver.fetchLeaderboard();
+		getLeaderBoard();
 	}
 
 	var incrementCPS = function() {
@@ -299,8 +321,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
-
-	$('div#leaderBoard table tbody tr').append('<td class="leader-diff"></td>')
 
 	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
@@ -861,6 +881,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(clicking.obj) {
 			smartChainClick();
 		}
+		getLeaderBoard();
 	}
 
 	var purge = function() {
