@@ -43,6 +43,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
+	var save = function() {
+		DataSaver.saveData();
+		DataSaver.fetchLeaderBoard();
+	}
+
 	var incrementCPS = function() {
 		clicksPerSecond++;
 	};
@@ -279,7 +284,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
 
-	$('div#globalInfo h3').append('<button id="save-game" class="btn">Save Game</button>')
+	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
@@ -858,6 +863,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		stopAutoBuy: stopAutoBuy,
 		startAutoBuy: startAutoBuy,
 
+		save: save,
 		stop: stop,
 		purge: purge
 	};
