@@ -140,7 +140,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 		$('li#clicks').remove();
 		$('div#clickTab').remove();
 		if(CPSChart !== null) {
-			CPSChart.destroy();
+			try {
+				CPSChart.destroy();
+			} catch(ignore) {}
 		}
 	}
 
