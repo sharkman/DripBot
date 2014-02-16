@@ -137,15 +137,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var destroyCPSChart = function() {
 		clearInterval(CPSPid);
 		CPSPid = -1;
-		try {
-			$('li#clicks').remove();
-		} catch(ignore) {}
-		try {
-			$('div#clickTab').remove();
-		} catch(ignore) {}
+		$('li#clicks').remove();
+		$('div#clickTab').remove();
+
 		if(CPSChart !== null) {
-			CPSChart.destroy();
-			CPSChart = null;
+			try {
+				CPSChart.destroy();
+				CPSChart = null;
+			} catch(ignore) {}
 		}
 	}
 
@@ -746,12 +745,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		stage3Pid = -1;
 		errorCheckPid = -1;
 		destroyCPSChart();
-		try {
-			$('div#dripbot').remove();
-		} catch(ignore) {}
-		try {
-			$('div#dripbot-update').remove();
-		} catch(ignore) {}
+		$('div#dripbot').remove();
+		$('div#dripbot-update').remove();
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
