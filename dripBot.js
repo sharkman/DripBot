@@ -67,14 +67,17 @@ $dripBot = (function($, oldDripBot, isPro) {
 				var diff = e.score - myscore;
 				if(diff > 0) {
 					diffs.eq(i).text('(+ ' + beautify(diff) + ')');
+					diffs.eq(i).css({
+						"color": startColor
+					});
+				} else if(diff < 0) {
+					diffs.eq(i).text('(- ' + beautify(diff * -1) + ')');
+					diffs.eq(i).css({
+						"color": stopColor
+					});
 				}
 				i++;
 			});
-
-			$('div#leaderBoard table tbody tr td.leader-diff').css({
-				"color": "#47a447"
-			});
-
 		}
 	}
 
