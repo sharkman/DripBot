@@ -992,14 +992,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 		autoBuy,
 		function() { gameLoop.start(); },
 		function() { gameLoop.stop(); }
-	)
+	);
 
-	var clickButton = new ToggleButtonMod(
+	var clickToggleButton = new ToggleButtonMod(
 		'#dripbot ul li#click-interval',
 		true,
 		'toggle-dripbot-click',
-		clicking,
-	)
+		clicking
+	);
 
 	new CSSMod('div#upgrades', {"height":"auto"}, {"height": "76px"});
 
