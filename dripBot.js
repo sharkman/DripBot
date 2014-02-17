@@ -849,7 +849,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		{
 			name: "3 (Win)",
 			func: stage3,
-			interval: 1000
+			interval: 10000
 		}
 	];
 
