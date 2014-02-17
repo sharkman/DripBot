@@ -166,7 +166,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	initialVersion = true,
 	isDripBotPro = isPro,
 	isUpdating = false,
-	stage = {name: ''},
+	stage = 0,
+	realStage = 0,
 	canBuy = true,
 	started = false,
 	errorAlerted = false,
@@ -478,7 +479,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateTitleText = function() {
-		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage.name);
+		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stages[stage].name);
 	}
 
 	var updateNextPurchase = function(purchase) {
@@ -738,6 +739,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 		return showPops;
 	}
 
+	var stage0 = function() {
+		// noop for now.
+	};
+
 	var stage1 = function() {
 		if(story.state == 6) {
 			drip();
@@ -759,7 +764,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(story.state != 12 && atMaxBytes()) {
 			drip();
 		}
-	}
+	};
 
 	var stage2 = function() {
 		if(atBPSCap()) {
@@ -788,7 +793,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 				}
 			}
         }
-	}
+	};
 
 	var stage3 = function() { 
 		if(!atBPSCap()) {
@@ -824,19 +829,44 @@ $dripBot = (function($, oldDripBot, isPro) {
 				drip();
 			}
 		}
-	}
+	};
 
 	var goToStage = function(i) {
-		i--;
-		stage = stages[i];
+		realStage = i;
+		stage = i;
+		if(!autoBuy.obj) {
+			stage = 0;
+		}
+
+		updateGameLoop();
+	};
+
+	var stopAutoBuy = function() {
+		realStage = stage;
+		stage = 0;
+		updateGameLoop();
+	};
+
+	var startAutoBuy = function() {
+		stage = realStage;
+		updateGameLoop();
+	}
+
+	var updateGameLoop = function() {
 		gameLoop.stop();
-		gameLoop.func = stage.func;
-		gameLoop.interval = stage.interval;
+		gameLoop.func = stages[stage].func;
+		gameLoop.interval = stages[stage].interval;
 		gameLoop.start();
 		updateTitleText();
+		popManager.oldNewPop('dripbot-title', 'Stage ' + stages[stage].name, 0);
 	};
 
 	var stages = [
+		{
+			name: "0 (Passive)",
+			func: stage0,
+			interval: 1000
+		},
 		{
 			name: "1 (Story)",
 			func: stage1,
@@ -1001,8 +1031,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		true,
 		'toggle-auto-buy',
 		autoBuy,
-		function() { gameLoop.start(); },
-		function() { gameLoop.stop(); }
+		function() { startAutoBuy(); },
+		function() { stopAutoBuy(); }
 	);
 
 	var clickToggleButton = new ToggleButtonMod(
