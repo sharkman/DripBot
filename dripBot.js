@@ -241,7 +241,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var save = function() {
 		DataSaver.saveData();
 		getLeaderBoard();
-		popManager.oldNewPop("save-game", 'Game Saved (Leaderboard Updated).', 0);
+		popManager.oldNewPop("save-game", 'Game Saved.', 0);
 	}
 
 	var incrementCPS = function() {
