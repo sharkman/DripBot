@@ -232,7 +232,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var getVersion = function() {
-		$.getScript('https://apottere.github.io/DripBot/version.js', versionCallback);
+		$.getScript('https://raw.github.com/apottere/DripBot/master/version.js', versionCallback);
 	}
 
 	var getTopThing = function() {
