@@ -56,7 +56,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 
 		this.start = function() {
-			if(this.pid !=== -1) {
+			if(this.pid !== -1) {
 				this.pid = setInterval(this.func, this.interval);
 			}
 		}
