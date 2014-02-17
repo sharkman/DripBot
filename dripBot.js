@@ -949,6 +949,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 				localStorage.removeItem(e);
 			} catch(ignore) {}
 		})
+		$dripBot = null;
 	}
 
 	// Mods
