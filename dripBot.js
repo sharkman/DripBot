@@ -5,22 +5,117 @@ $dripBot = (function($, oldDripBot, isPro) {
 	if(oldDripBot instanceof Object) {
 		console.log("Stopping old DripBot and starting a new one.");
 		oldDripBot.stop();
-	}
+	};
+
+	var mods = [];
+
+	function registerMod(mod) {
+		mods.push(mod);
+	};
+
+	function destoryMods() {
+		mods.reverse().forEach(function(e) {
+			try {
+				e.destroy();
+			} catch(e) {
+				console.log("Error destorying mod:");
+				console.log(e);
+			}
+		});
+	};
+
+	function DOMMod(parent, append, selector, contents, css) {
+		this.parentElem = $(parent);
+		if(append) {
+			this.parentElem.append(contents);
+		} else {
+			this.parentElem.prepend(contents);
+		}
+		this.elem = $(selector);
+
+		this.destroy = function() {
+			this.elem.unbind();
+			this.elem.remove();
+		};
+
+		if(css) {
+			this.elem.css(css);
+		}
+
+		registerMod(this);
+	};
+
+	function IntervalMod(func, interval, noAutoStart) {
+		this.func = func;
+		this.interval = interval;
+		this.pid = -1;
+
+		this.stop = function() {
+			clearInterval(this.pid);
+			this.pid = -1;
+		}
+
+		this.start = function() {
+			if(this.pid !=== -1) {
+				this.pid = setInterval(this.func, this.interval);
+			}
+		}
+
+		this.restart = function() {
+			this.stop();
+			this.start();
+		};
+
+		this.destroy = function() {
+			this.stop();
+		}
+
+		if(!noAutoStart) {
+			this.start();
+		}
+		registerMod(this);
+	};
+
+	var saveButton = new DOMMod(
+		'div#globalInfo h3',
+		true,
+		'#save-game',
+		'<button id="save-game" class="btn btn-success btn-lg" href="#" onclick="return false">Save Game</button>',
+		{
+			"margin-left": "20px"
+		}
+	);
+
+	var gameLoop = new IntervalMod(function() {}, 500, true);
+	var stages = [
+		{
+			name: "1 (Story)",
+			func: stage1,
+			interval: 500
+		},
+		{
+			name: "2 (Purchase)",
+			func: stage2,
+			interval: 500
+		},
+		{
+			name: "3 (Win)",
+			func: stage3,
+			interval: 1000
+		}
+	];
 
 	var version = '',
 	initialVersion = true,
 	isDripBotPro = isPro,
 	isUpdating = false,
-	stage1Pid = -1,
-	stage2Pid = -1,
-	stage3Pid = -1,
 	getVersionPid = -1,
+	stage = 1,
 	canBuy = true,
 	started = false,
 	errorCheckPid = -1,
 	errorAlerted = false,
 	signupAlerted = false,
-	stage = '',
 	stopColor = '#e9656d',
 	startColor = '#47a447',
 	clickerPid = -1,
@@ -330,8 +425,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
-
-	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
@@ -787,6 +880,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var stop = function() {
+		destoryMods();
+
 		$('div#storeColumn').unbind('click', storeClickCallback);
 		started = false;
 		popManager.newPop = popManager.oldNewPop;
@@ -870,7 +965,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 		LeaderBoardUI.createLeaderboardTable = updateLeaderBoard;
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
+
+		// Callbacks
 		$('div#storeColumn').click(storeClickCallback);
+		saveButton.elem.click(save);
+
 		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
 		getVersion();
 		updateTitleText();
@@ -915,6 +1014,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		stopAutoBuy: stopAutoBuy,
 		startAutoBuy: startAutoBuy,
 
+		stages: stages,
+		mods: mods,
 		save: save,
 		stop: stop,
 		purge: purge
