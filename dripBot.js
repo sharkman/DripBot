@@ -934,6 +934,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var stop = function() {
+		save();
 		destroyCPSChart();
 		destroyMods();
 
