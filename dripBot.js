@@ -43,6 +43,55 @@ $dripBot = (function($, oldDripBot, isPro) {
 	MINUTE = 60 * 1000,
 	topThing = null;
 
+	var beautify = function(e) {
+		return NumUtils.byteConvert(e, 3);
+	}
+
+	var addDiffsToLB = function(lb) {
+		if(lb) {
+			var myscore;
+			if(lb.length > 2) {
+				myscore = lb[2].score;
+			} else {
+				myscore = lb[1].score;
+			}
+
+			var diffs = $('div#leaderBoard table tbody tr td.leader-diff');
+			if(diffs.length <= 0) {
+				$('div#leaderBoard table tbody tr').append('<td class="leader-diff"></td>')
+				diffs = $('div#leaderBoard table tbody tr td.leader-diff');
+			}
+
+			var i = 0;
+			lb.forEach(function(e) {
+				var diff = e.score - myscore;
+				if(diff > 0) {
+					diffs.eq(i).text('(+ ' + beautify(diff) + ')');
+				}
+				i++;
+			});
+
+			$('div#leaderBoard table tbody tr td.leader-diff').css({
+				"color": "#47a447"
+			});
+
+		}
+	}
+
+	var updateLeaderBoard = function(lb) {
+		LeaderBoardUI.oldCreateLeaderboardTable(lb);
+		addDiffsToLB(lb);
+	}
+
+	var getLeaderBoard = function() {
+		DataSaver.fetchLeaderboard();
+	}
+
+	var save = function() {
+		DataSaver.saveData();
+		getLeaderBoard();
+	}
+
 	var incrementCPS = function() {
 		clicksPerSecond++;
 	};
@@ -278,6 +327,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
+
+	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
@@ -736,6 +787,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		$('div#storeColumn').unbind('click', storeClickCallback);
 		started = false;
 		popManager.newPop = popManager.oldNewPop;
+		LeaderBoardUI.createLeaderboardTable = LeaderBoardUI.oldCreateLeaderboardTable;
 		clicking.obj = false;
 		autoBuy.obj = false;
 		clearInterval(getVersionPid);
@@ -753,6 +805,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		destroyCPSChart();
 		$('div#dripbot').remove();
 		$('div#dripbot-update').remove();
+		$('div#globalInfo h3 button').remove();
+		$('div#leaderBoard table tbody tr td.leader-diff').remove();
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
@@ -809,6 +863,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 				popManager.oldNewPop(e,t,a);
 			}
 		}
+		LeaderBoardUI.oldCreateLeaderboardTable = LeaderBoardUI.createLeaderboardTable;
+		LeaderBoardUI.createLeaderboardTable = updateLeaderBoard;
 		$('div#middleColumn').prepend(updateBox);
 		$('div#middleColumn').append(displayBox);
 		$('div#storeColumn').click(storeClickCallback);
@@ -831,6 +887,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(clicking.obj) {
 			smartChainClick();
 		}
+		getLeaderBoard();
 	}
 
 	var purge = function() {
@@ -855,6 +912,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		stopAutoBuy: stopAutoBuy,
 		startAutoBuy: startAutoBuy,
 
+		save: save,
 		stop: stop,
 		purge: purge
 	};
