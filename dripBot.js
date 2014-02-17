@@ -71,7 +71,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 						"color": startColor
 					});
 				} else if(diff < 0) {
-					diffs.eq(i).text('(- ' + beautify(diff) + ')');
+					diffs.eq(i).text('(- ' + beautify(diff * -1) + ')');
 					diffs.eq(i).css({
 						"color": stopColor
 					});
