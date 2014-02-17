@@ -333,7 +333,7 @@ $dripBot = (function($, oldDripBot, isPro) {
         series[2].addPoint([x, CPSCMALong], true, shift);
         clicksPerSecond = 0;
 
-    },
+    }
 
 	var destroyCPSChart = function() {
 		if(CPSChart !== null) {
