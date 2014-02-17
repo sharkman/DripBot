@@ -362,8 +362,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var versionChange = function() {
 		isUpdating = true;
-		clearInterval(getVersionPid);
-		getVersionPid = -1;
+		checkVersion.stop();
 		$('div#dripbot-update').css({
 			"display": "block"
 		});
