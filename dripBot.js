@@ -79,8 +79,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateLeaderBoard = function(lb) {
-		console.log("Updating leaderboard");
-		console.log(lb);
 		LeaderBoardUI.oldCreateLeaderboardTable(lb);
 		addDiffsToLB(lb);
 	}
