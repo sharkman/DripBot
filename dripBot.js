@@ -966,14 +966,19 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'div#middleColumn',
 		true,
 		'#dripbot',
-		'<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>'
+		'<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>',
+		{"text-align": "left"}
 	);
 
 	var updateBox = new DOMMod(
 		'div#middleColumn',
 		false,
 		'#dripbot-update',
-		'<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>DripBot will automatically update in 5 seconds...</p></div>'
+		'<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>DripBot will automatically update in 5 seconds...</p></div>',
+		{
+			"background-color": "#47a447",
+			"padding": "10px"
+		}
 	);
 
 	var chartTab = new DOMMod(
