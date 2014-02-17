@@ -58,14 +58,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 		this.draw = function() {
 			var elem = this.domMod.elem;
-			if(save.obj) {
+			if(this.save.obj) {
 				elem.removeClass(this.startClass);
 				elem.addClass(this.stopClass);
 				elem.text(this.stopText);
 			} else {
 				elem.removeClass(this.stopClass);
 				elem.addClass(this.startClass);
-				elem.text(this.stopText);
+				elem.text(this.startText);
 			}
 		}
 
@@ -78,6 +78,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 				this.callbackFalse();
 			}
 		}
+
+		this.domMod.elem.click($.proxy(this.toggle, this));
 
 		this.destroy = function() {
 			this.domMod.destroy();
@@ -159,6 +161,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var version = '',
+	successColor = '#5cb85c',
+	dangerColor = '#d9534f',
 	initialVersion = true,
 	isDripBotPro = isPro,
 	isUpdating = false,
@@ -212,12 +216,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 				if(diff > 0) {
 					diffs.eq(i).text('(+ ' + beautify(diff) + ')');
 					diffs.eq(i).css({
-						"color": startColor
+						"color": successColor
 					});
 				} else if(diff < 0) {
 					diffs.eq(i).text('(- ' + beautify(diff * -1) + ')');
 					diffs.eq(i).css({
-						"color": stopColor
+						"color": dangerColor
 					});
 				}
 				i++;
@@ -891,6 +895,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
+		$('div#upgrades').children('div').css({"background-color":""});
 
 		$('ul#dripChartTab').children().first().children('a').click();
 	}
@@ -998,7 +1003,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'#dripbot ul li#click-interval',
 		true,
 		'toggle-dripbot-click',
-		clicking
+		clicking,
+		startClicking,
+		stopClicking
 	);
 
 	new CSSMod('div#upgrades', {"height":"auto"}, {"height": "76px"});
