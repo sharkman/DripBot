@@ -133,6 +133,40 @@ $dripBot = (function($, oldDripBot, isPro) {
 		registerMod(this);
 	};
 
+	function TimeoutMod(func, timeout, noAutoStart) {
+		this.func = func;
+		this.timeout = timeout;
+		this.pid = -1;
+
+		this.stop = function() {
+			clearTimeout(this.pid);
+			this.pid = -1;
+		}
+
+		this.start = function() {
+			if(this.pid === -1) {
+				this.pid = setTimeout(
+					$.proxy(function() { this.pid = -1; this.func(); }, this),
+					this.timeout
+				);
+			}
+		}
+
+		this.restart = function() {
+			this.stop();
+			this.start();
+		}
+
+		this.destroy = function() {
+			this.stop();
+		}
+
+		if(!noAutoStart) {
+			this.start();
+		}
+		registerMod(this);
+	}
+
 	function ClickMod(elem, handler) {
 		this.elem = $(elem);
 		this.handler = handler;
@@ -172,8 +206,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	started = false,
 	errorAlerted = false,
 	signupAlerted = false,
-	clickerPid = -1,
-	clickInterval = 100,
 	clickPointCount = 0,
 	clicksPerSecond = 0,
 	clicksPerSecondCMA = 0,
@@ -369,9 +401,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 			"display": "block"
 		});
 
-		setTimeout(function() {
-			$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');
-		}, 5000);
+		versionUpdate.start();
 	}
 
 	var getVersion = function() {
@@ -492,11 +522,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateClickInterval = function() {
-		if(clickInterval < 60000) {
-			$('#click-interval p').text("Next click in: " + clickInterval + 'ms.  Clicks till next break: ' + clicksLeft.obj);
+		clicker.timeout = getNewClickTimeout();
+
+		if(clicker.timeout < 60000) {
+			$('#click-interval p').text("Next click in: " + clicker.timeout + 'ms.  Clicks till next break: ' + clicksLeft.obj);
 		} else {
-			var minutes = Math.floor(clickInterval / MINUTE);
-			var seconds = Math.floor((clickInterval - minutes * MINUTE) / 1000);
+			var minutes = Math.floor(clicker.timeout / MINUTE);
+			var seconds = Math.floor((clicker.timeout - minutes * MINUTE) / 1000);
 			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksLeft.obj);
 		}
 	}
@@ -614,9 +646,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 			}
 			updateNextPurchase(topThing);
 			if(topThing.isUpgrade) {
-				setTimeout(function() {
-					topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
-				}, 200);
+				highlightTopThing.start();
 			} else {
 				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
 			}
@@ -716,17 +746,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var stopClicking = function() {
-		clearTimeout(clickerPid);
-		clickerPid = -1;
+		clicker.stop();
 	}
 
 	var startClicking = function() {
-		if(clickerPid === -1) {
-			clickInterval = getNewClickTimeout();
-			getNewClicksTillBreak();
-			updateClickInterval();
-			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
-		}
+		updateClickInterval();
+		clicker.start();
 	}
 
 	var setBenevolentLeader = function(bool) {
@@ -784,7 +809,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 					buyPowerup(topThing.item.name);
 				}
 				canBuy = false;
-				setTimeout(function() { canBuy = true; }, 800);
+				canBuyTime.start();
 			}
 		} else {
 			if(getCapacity() < topThing.realPrice) {
@@ -902,12 +927,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var smartChainClick = function() {
 		if(clicking.obj) {
-			clickInterval = getNewClickTimeout();
 			updateClickInterval();
-		}
-
-		if(clicking.obj) {
-			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
+			clicker.start();
 			clickCup();
 		}
 	}
@@ -915,7 +936,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var stop = function() {
 		destroyCPSChart();
 		destroyMods();
-		stopClicking();
 
 		started = false;
 		clicking.obj = false;
@@ -960,9 +980,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 		clickCup();
 
 		// Emergency clicks, sometimes game stalls.
-		setTimeout(function() { clickCup(); }, 2000);
-		setTimeout(function() { clickCup(); }, 5000);
-		setTimeout(function() { start(); }, 500);
+		new TimeoutMod(function() { clickCup(); }, 2000);
+		new TimeoutMod(function() { clickCup(); }, 5000);
+		new TimeoutMod(function() { start(); }, 500);
 
 		$('li#clicks a').click();
 
@@ -1066,6 +1086,28 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var checkVersion = new IntervalMod(function() { getVersion(); }, 60000);
 	var CPSTick = new IntervalMod(tickCPS, 1000, true);
 
+	var clicker = new TimeoutMod(smartChainClick, 100, true);
+	var versionUpdate = new TimeoutMod(
+		function() {
+			$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');
+		},
+		5000,
+		true
+	);
+	var highlightTopThing = new TimeoutMod(
+		function() {
+			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+		},
+		200,
+		true
+	);
+
+	var canBuyTime = new TimeoutMod(
+		function() { canBuy = true; },
+		800,
+		true
+	);
+
 	new APIMod(
 		popManager,
 		'newPop',
@@ -1105,7 +1147,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
 
-		mods: mods,
 		save: save,
 		stop: stop,
 		purge: purge
