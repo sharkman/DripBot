@@ -5,26 +5,207 @@ $dripBot = (function($, oldDripBot, isPro) {
 	if(oldDripBot instanceof Object) {
 		console.log("Stopping old DripBot and starting a new one.");
 		oldDripBot.stop();
+	};
+
+	var mods = [];
+
+	function registerMod(mod) {
+		mods.push(mod);
+	};
+
+	function destroyMods() {
+		mods.reverse().forEach(function(e) {
+			try {
+				e.destroy();
+			} catch(e) {
+				console.log("Error destorying mod:");
+				console.log(e);
+			}
+		});
+	};
+
+	function DOMMod(parent, append, selector, contents, css) {
+		this.parentElem = $(parent);
+		if(append) {
+			this.parentElem.append(contents);
+		} else {
+			this.parentElem.prepend(contents);
+		}
+		this.elem = $(selector);
+
+		this.destroy = function() {
+			this.elem.unbind();
+			this.elem.remove();
+		};
+
+		if(css) {
+			this.elem.css(css);
+		}
+
+		registerMod(this);
+	};
+
+	function ToggleButtonMod(parent, append, id, save, callbackTrue, callbackFalse, css) {
+		this.domMod = new DOMMod(parent, append, '#' + id, '<button id="' + id + '" class="btn" href="#" onclick="return false"></button>', css);
+		this.save = save;
+		this.callbackTrue = callbackTrue;
+		this.callbackFalse = callbackFalse;
+
+		this.stopText = "Stop";
+		this.stopClass = "btn-danger";
+		this.startText = "Start";
+		this.startClass = "btn-success";
+
+		this.draw = function() {
+			var elem = this.domMod.elem;
+			if(this.save.obj) {
+				elem.removeClass(this.startClass);
+				elem.addClass(this.stopClass);
+				elem.text(this.stopText);
+			} else {
+				elem.removeClass(this.stopClass);
+				elem.addClass(this.startClass);
+				elem.text(this.startText);
+			}
+		}
+
+		this.toggle = function() {
+			this.save.set(! this.save.obj);
+			this.draw();
+			if(this.save.obj) {
+				this.callbackTrue();
+			} else {
+				this.callbackFalse();
+			}
+		}
+
+		this.domMod.elem.click($.proxy(this.toggle, this));
+
+		this.destroy = function() {
+			this.domMod.destroy();
+		}
+
+		this.draw();
+		registerMod(this);
+	}
+
+	function CSSMod(elem, css, revert) {
+		this.elem = $(elem);
+		this.revert = revert;
+
+		this.elem.css(css);
+
+		this.destroy = function() {
+			this.elem.css(revert);
+		}
+
+		registerMod(this);
+	}
+
+	function IntervalMod(func, interval, noAutoStart) {
+		this.func = func;
+		this.interval = interval;
+		this.pid = -1;
+
+		this.stop = function() {
+			clearInterval(this.pid);
+			this.pid = -1;
+		}
+
+		this.start = function() {
+			if(this.pid === -1) {
+				this.pid = setInterval(this.func, this.interval);
+			}
+		}
+
+		this.restart = function() {
+			this.stop();
+			this.start();
+		};
+
+		this.destroy = function() {
+			this.stop();
+		}
+
+		if(!noAutoStart) {
+			this.start();
+		}
+		registerMod(this);
+	};
+
+	function TimeoutMod(func, timeout, noAutoStart) {
+		this.func = func;
+		this.timeout = timeout;
+		this.pid = -1;
+
+		this.stop = function() {
+			clearTimeout(this.pid);
+			this.pid = -1;
+		}
+
+		this.start = function() {
+			if(this.pid === -1) {
+				this.pid = setTimeout(
+					$.proxy(function() { this.pid = -1; this.func(); }, this),
+					this.timeout
+				);
+			}
+		}
+
+		this.restart = function() {
+			this.stop();
+			this.start();
+		}
+
+		this.destroy = function() {
+			this.stop();
+		}
+
+		if(!noAutoStart) {
+			this.start();
+		}
+		registerMod(this);
+	}
+
+	function ClickMod(elem, handler) {
+		this.elem = $(elem);
+		this.handler = handler;
+
+		this.elem.click(this.handler);
+
+		this.destroy = function() {
+			this.elem.unbind('click', this.handler);
+		}
+
+		registerMod(this);
+	}
+
+	function APIMod(obj, orig, func) {
+		this.obj = obj;
+		this.orig = orig;
+		this.oldName = 'old' + orig.charAt(0).toUpperCase() + orig.slice(1);
+		this.obj[this.oldName] = this.obj[this.orig];
+		this.obj[this.orig] = func;
+
+		this.destroy = function() {
+			this.obj[this.orig] = this.obj[this.oldName];
+		}
+
+		registerMod(this);
 	}
 
 	var version = '',
+	successColor = '#5cb85c',
+	dangerColor = '#d9534f',
 	initialVersion = true,
 	isDripBotPro = isPro,
 	isUpdating = false,
-	stage1Pid = -1,
-	stage2Pid = -1,
-	stage3Pid = -1,
-	getVersionPid = -1,
+	stage = 0,
+	realStage = 0,
 	canBuy = true,
 	started = false,
-	errorCheckPid = -1,
 	errorAlerted = false,
 	signupAlerted = false,
-	stage = '',
-	stopColor = '#e9656d',
-	startColor = '#47a447',
-	clickerPid = -1,
-	clickInterval = 100,
 	clickPointCount = 0,
 	clicksPerSecond = 0,
 	clicksPerSecondCMA = 0,
@@ -68,12 +249,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 				if(diff > 0) {
 					diffs.eq(i).text('(+ ' + beautify(diff) + ')');
 					diffs.eq(i).css({
-						"color": startColor
+						"color": successColor
 					});
 				} else if(diff < 0) {
 					diffs.eq(i).text('(- ' + beautify(diff * -1) + ')');
 					diffs.eq(i).css({
-						"color": stopColor
+						"color": dangerColor
 					});
 				}
 				i++;
@@ -93,6 +274,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var save = function() {
 		DataSaver.saveData();
 		getLeaderBoard();
+		popManager.oldNewPop("save-game", 'Game Saved.', 0);
 	}
 
 	var incrementCPS = function() {
@@ -168,36 +350,30 @@ $dripBot = (function($, oldDripBot, isPro) {
 		    }]
 		});
 
-		CPSPid = setInterval(
-            function() {
-                var series = CPSChart.series;
-                var shift = true;
-                if(clickPointCount < CPSChartLength) {
-                    clickPointCount++;
-                    shift = false;
-                }
-                var x = (new Date()).getTime();
-
-                incrementCPSCMACount();
-                CPSCMALongCount++;
-                CPSCMALong = calculateCPSCMALong(clicksPerSecond);
-                clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
-                series[0].addPoint([x, clicksPerSecond], true, shift);
-                series[1].addPoint([x, clicksPerSecondCMA], true, shift);
-                series[2].addPoint([x, CPSCMALong], true, shift);
-                clicksPerSecond = 0;
-
-	        },
-	        1000
-		);
+		CPSTick.start();
 	}
 
-	var destroyCPSChart = function() {
-		clearInterval(CPSPid);
-		CPSPid = -1;
-		$('li#clicks').remove();
-		$('div#clickTab').remove();
+    var tickCPS = function() {
+        var series = CPSChart.series;
+        var shift = true;
+        if(clickPointCount < CPSChartLength) {
+            clickPointCount++;
+            shift = false;
+        }
+        var x = (new Date()).getTime();
 
+        incrementCPSCMACount();
+        CPSCMALongCount++;
+        CPSCMALong = calculateCPSCMALong(clicksPerSecond);
+        clicksPerSecondCMA = calculateCPSCMA(clicksPerSecond);
+        series[0].addPoint([x, clicksPerSecond], true, shift);
+        series[1].addPoint([x, clicksPerSecondCMA], true, shift);
+        series[2].addPoint([x, CPSCMALong], true, shift);
+        clicksPerSecond = 0;
+
+    }
+
+	var destroyCPSChart = function() {
 		if(CPSChart !== null) {
 			try {
 				CPSChart.destroy();
@@ -220,19 +396,16 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var versionChange = function() {
 		isUpdating = true;
-		clearInterval(getVersionPid);
-		getVersionPid = -1;
+		checkVersion.stop();
 		$('div#dripbot-update').css({
 			"display": "block"
 		});
 
-		setTimeout(function() {
-			$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');
-		}, 5000);
+		versionUpdate.start();
 	}
 
 	var getVersion = function() {
-		$.getScript('https://raw.github.com/apottere/DripBot/master/version.js', versionCallback);
+		$.getScript('https://raw.githack.com/apottere/DripBot/master/version.js', versionCallback);
 	}
 
 	var getTopThing = function() {
@@ -316,22 +489,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 	var rc4Rand = new Rc4Random((new Date()).toString());
 
-	var displayBox = '<div id="dripbot"><img id="dripbot-logo" src="https://raw.github.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p><button id="toggle-auto-buy" class="btn" href="#" onclick=""></button></li><li id="click-interval"><p></p><button id="dripbot-click-toggle" class="btn" href="#" onclick=""></button></li></ul></div>';
-	var updateBox = '<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>';
-	updateBox += "DripBot will automatically update in 5 seconds...";
-	updateBox += '</p></div>'
-
-	var chartTab = $('#dripChartTab');
-	chartTab.append('<li id="clicks"><a href="#clickTab" data-toggle="tab">Clicks</a></li>');
-
-	var tabContent = $('div#globalInfo div.row div.tab-content');
-	tabContent.append('<div id="clickTab" class="tab-pane"></div>');
-
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
 	modalButton = 'input.vex-dialog-button-primary';
-
-	$('div#globalInfo h3').append('<button id="save-game" class="btn" href="#" onclick="$dripBot.save(); return false;">Save Game</button>')
 
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
@@ -349,46 +509,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateTitleText = function() {
-		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stage)
-	}
-
-	var startAutoBuy = function() {
-		autoBuy.set(true);
-		toggleAutoBuyButton(autoBuy.obj);
-	}
-
-	var stopAutoBuy = function() {
-		autoBuy.set(false);
-		toggleAutoBuyButton(autoBuy.obj);
-	}
-
-	var toggleAutoBuyButton = function(toggle) {
-		toggleButton(toggle, $('#toggle-auto-buy'), 'stopAutoBuy()', 'startAutoBuy()');
-	}
-
-	var toggleClickButton = function() {
-		toggleButton(clicking.obj, $('#dripbot-click-toggle'), 'stopClicking()', 'startClicking()');
-	}
-
-	var toggleButton = function(started, button, ftrue, ffalse) {
-		var color;
-		if(started) {
-			color = stopColor;
-			button.text('Stop');
-			button.attr("onclick", "$dripBot." + ftrue + "; return false;");
-		} else {
-			color = startColor;
-			button.text('Start');
-			button.attr("onclick", "$dripBot." + ffalse + "; return false");
-		}
-
-		button.css({
-			"background-color": color
-		});
-	}
-
-	var toggleStopButton = function(started) {
-		toggleButton(started, $('#dripbot-toggle'), "stop()", "start()");
+		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stages[stage].name);
 	}
 
 	var updateNextPurchase = function(purchase) {
@@ -401,11 +522,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateClickInterval = function() {
-		if(clickInterval < 60000) {
-			$('#click-interval p').text("Next click in: " + clickInterval + 'ms.  Clicks till next break: ' + clicksLeft.obj);
+		clicker.timeout = getNewClickTimeout();
+
+		if(clicker.timeout < 60000) {
+			$('#click-interval p').text("Next click in: " + clicker.timeout + 'ms.  Clicks till next break: ' + clicksLeft.obj);
 		} else {
-			var minutes = Math.floor(clickInterval / MINUTE);
-			var seconds = Math.floor((clickInterval - minutes * MINUTE) / 1000);
+			var minutes = Math.floor(clicker.timeout / MINUTE);
+			var seconds = Math.floor((clicker.timeout - minutes * MINUTE) / 1000);
 			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksLeft.obj);
 		}
 	}
@@ -523,9 +646,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 			}
 			updateNextPurchase(topThing);
 			if(topThing.isUpgrade) {
-				setTimeout(function() {
-					topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
-				}, 200);
+				highlightTopThing.start();
 			} else {
 				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
 			}
@@ -625,21 +746,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var stopClicking = function() {
-		clicking.set(false);
-		clearTimeout(clickerPid);
-		clickerPid = -1;
-		toggleClickButton();
+		clicker.stop();
 	}
 
 	var startClicking = function() {
-		if(!clicking.obj && clickerPid == -1) {
-			clicking.set(true);
-			clickInterval = getNewClickTimeout();
-			getNewClicksTillBreak();
-			updateClickInterval();
-			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
-			toggleClickButton();
-		}
+		updateClickInterval();
+		clicker.start();
 	}
 
 	var setBenevolentLeader = function(bool) {
@@ -652,111 +764,150 @@ $dripBot = (function($, oldDripBot, isPro) {
 		return showPops;
 	}
 
+	var stage0 = function() {
+		// noop for now.
+	};
+
 	var stage1 = function() {
-		if(autoBuy.obj) {
-			if(story.state == 6) {
-				drip();
-			}
-
-			if(story.state == 9) {
-				buyPowerup('Cursor');
-			}
-
-			if(story.state == 11) {
-				buyUpgrade('Enhanced Precision');
-			}
-
-			if(story.state == 12) {
-				stage = '2';
-				clearInterval(stage1Pid);
-				stage2Pid = setInterval(function() { stage2(); }, 500);
-				updateTitleText();
-				return;
-			}
-
-			if(story.state != 12 && atMaxBytes()) {
-				drip();
-			}
+		if(story.state == 6) {
+			drip();
 		}
-	}
+
+		if(story.state == 9) {
+			buyPowerup('Cursor');
+		}
+
+		if(story.state == 11) {
+			buyUpgrade('Enhanced Precision');
+		}
+
+		if(story.state == 12) {
+			goToStage(2);
+			return;
+		}
+
+		if(story.state != 12 && atMaxBytes()) {
+			drip();
+		}
+	};
 
 	var stage2 = function() {
-		if(autoBuy.obj) {
-			if(atBPSCap()) {
-				stage = '3';
-				topThing = null;
-				clearInterval(stage2Pid);
-				stage3Pid = setInterval(function() { stage3(); }, 1000);
-				updateTitleText();
-				return;
-			}
+		if(atBPSCap()) {
+			goToStage(3);
+			return;
+		}
 
-			if(topThing == null) {
-				getNewTopThing();
-			}
+		if(topThing == null) {
+			getNewTopThing();
+		}
 
-			if(getBytes() >= topThing.realPrice) {
-				if(canBuy) {
-					if(topThing.isUpgrade) {
-						buyUpgrade(topThing.item.name);
-					} else {
-						buyPowerup(topThing.item.name);
-					}
-					canBuy = false;
-					setTimeout(function() { canBuy = true; }, 800);
+		if(getBytes() >= topThing.realPrice) {
+			if(canBuy) {
+				if(topThing.isUpgrade) {
+					buyUpgrade(topThing.item.name);
+				} else {
+					buyPowerup(topThing.item.name);
 				}
-			} else {
-				if(getCapacity() < topThing.realPrice) {
-					if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
-						drip();
-					}
-				}
-	        }
-	    }
-	}
-
-	var stage3 = function() { 
-		if(autoBuy.obj) {
-			if(!atBPSCap()) {
-				stage = '2';
-				currentLeader = null;
-				timeOfLeaderChange = null;
-				clearInterval(stage3Pid);
-				stage2Pid = setInterval(function() { stage2(); }, 500);
-				updateTitleText();
-				return;
+				canBuy = false;
+				canBuyTime.start();
 			}
-
-			var leaderName = getLeader();
-			if(!currentLeader) {
-				currentLeader = getMyName();
-			}
-
-			if (leaderName != getMyName()) {
-				if(currentLeader == getMyName()) {
-					currentLeader = leaderName;
-					timeOfLeaderChange = $.now();
-					console.log("As of " + timeOfLeaderChange + " there is one fairer in the land... it is '" + leaderName + "'.");
-
-				} else if(leaderName != currentLeader) {
-					console.log("Leader changed from '" + currentLeader + "' to '" + leaderName + "'.");
-					currentLeader = leaderName;
-				}
-				drip();
-
-			} else {
-				if (currentLeader != leaderName) {
-					currentLeader = leaderName;
-					var diffTime = $.time;
-					console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
-				}
-
-				if(!benevolentLeader) {
+		} else {
+			if(getCapacity() < topThing.realPrice) {
+				if((getBytes() + getCapacity()) >= topThing.realPrice || atMaxBytes()) {
 					drip();
 				}
 			}
+        }
+	};
+
+	var stage3 = function() { 
+		if(!atBPSCap()) {
+			goToStage(2);
+			return;
 		}
+
+		var leaderName = getLeader();
+		if(!currentLeader) {
+			currentLeader = getMyName();
+		}
+
+		if (leaderName != getMyName()) {
+			if(currentLeader == getMyName()) {
+				currentLeader = leaderName;
+				timeOfLeaderChange = $.now();
+				console.log("As of " + timeOfLeaderChange + " there is one fairer in the land... it is '" + leaderName + "'.");
+
+			} else if(leaderName != currentLeader) {
+				console.log("Leader changed from '" + currentLeader + "' to '" + leaderName + "'.");
+				currentLeader = leaderName;
+			}
+			drip();
+
+		} else {
+			if (currentLeader != leaderName) {
+				currentLeader = leaderName;
+				var diffTime = $.time;
+				console.log("As of " + $.now() + " you are the fairest of them all (it took " + diffTime + " to recover).");
+			}
+
+			if(!benevolentLeader) {
+				drip();
+			}
+		}
+	};
+
+	var goToStage = function(i) {
+		realStage = i;
+		stage = i;
+		if(!autoBuy.obj) {
+			stage = 0;
+		}
+
+		updateGameLoop();
+	};
+
+	var stopAutoBuy = function() {
+		realStage = stage;
+		stage = 0;
+		updateGameLoop();
+	};
+
+	var startAutoBuy = function() {
+		stage = realStage;
+		updateGameLoop();
 	}
+
+	var updateGameLoop = function() {
+		gameLoop.stop();
+		gameLoop.func = stages[stage].func;
+		gameLoop.interval = stages[stage].interval;
+		gameLoop.start();
+		updateTitleText();
+		popManager.oldNewPop('dripbot-title', 'Stage ' + stages[stage].name, 0);
+	};
+
+	var stages = [
+		{
+			name: "0 (Passive)",
+			func: stage0,
+			interval: 1000
+		},
+		{
+			name: "1 (Story)",
+			func: stage1,
+			interval: 500
+		},
+		{
+			name: "2 (Purchase)",
+			func: stage2,
+			interval: 500
+		},
+		{
+			name: "3 (Win)",
+			func: stage3,
+			interval: 2 * MINUTE
+		}
+	];
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
@@ -776,45 +927,27 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var smartChainClick = function() {
 		if(clicking.obj) {
-			clickInterval = getNewClickTimeout();
 			updateClickInterval();
-		}
-
-		if(clicking.obj) {
-			clickerPid = setTimeout(function() { smartChainClick(); }, clickInterval);
+			clicker.start();
 			clickCup();
 		}
 	}
 
 	var stop = function() {
-		$('div#storeColumn').unbind('click', storeClickCallback);
+		save();
+		destroyCPSChart();
+		destroyMods();
+
 		started = false;
-		popManager.newPop = popManager.oldNewPop;
-		LeaderBoardUI.createLeaderboardTable = LeaderBoardUI.oldCreateLeaderboardTable;
 		clicking.obj = false;
 		autoBuy.obj = false;
-		clearInterval(getVersionPid);
-		clearInterval(stage1Pid);
-		clearInterval(stage2Pid);
-		clearInterval(stage3Pid);
-		clearInterval(clickerPid);
-		clearInterval(errorCheckPid);
-		clearTimeout(clickerPid);
-		getVersionPid = -1;
-		stage1Pid = -1;
-		stage2Pid = -1;
-		stage3Pid = -1;
-		errorCheckPid = -1;
-		destroyCPSChart();
-		$('div#dripbot').remove();
-		$('div#dripbot-update').remove();
-		$('div#globalInfo h3 button').remove();
+
 		$('div#leaderBoard table tbody tr td.leader-diff').remove();
 		if(topThing) {
 			topThing.ident.css({"background-color": ''});
 		}
+		$('div#upgrades').children('div').css({"background-color":""});
 
-		clickButton.unbind('click', incrementCPS);
 		$('ul#dripChartTab').children().first().children('a').click();
 	}
 
@@ -825,27 +958,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 			started = true;
 		}
 		if (story.inProgress) {
-			stage = '1';
-			stage1Pid = setInterval(function() { stage1(); }, 100);
+			goToStage(1);
 		} else if(!atBPSCap()) {
-			stage = '2';
-			stage2Pid = setInterval(function() { stage2(); }, 500);
-			getNewTopThing();
+			goToStage(2);
 		} else {
-			stage = '3';
-			stage3Pid = setInterval(function() { stage3(); }, 1000);
-			getNewTopThing();
+			goToStage(3);
 		}
-		updateTitleText();
-		toggleStopButton(true);
-		toggleAutoBuyButton(autoBuy.obj);
+		getNewTopThing();
 		createCPSChart();
-		if(errorCheckPid == -1) {
-			errorCheckPid = setInterval(function() { checkForError(); }, 2000);
-		}
-		if(!isUpdating) {
-			getVersionPid = setInterval(function() { getVersion(); }, 60000);
-		}
 	}
 
 	var init = function() {
@@ -854,38 +974,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 		} catch(ignore) {}
 
 		getVersion();
-		$('div#upgrades').css({"height":"auto"});
-		document.hasFocus = function() { return true; };
-		AnonymousUserManager.canDrip = function() { return true; };
-		popManager.oldNewPop = popManager.newPop;
-		popManager.newPop = function(e, t, a) {
-			if(showPops || (e.indexOf('addMem') == -1 && e != 'chartContainer')) {
-				if(e === 'chartContainer' && $('div#clickTab').is(':visible')) {
-					return
-				}
-				popManager.oldNewPop(e,t,a);
-			}
-		}
-		LeaderBoardUI.oldCreateLeaderboardTable = LeaderBoardUI.createLeaderboardTable;
-		LeaderBoardUI.createLeaderboardTable = updateLeaderBoard;
-		$('div#middleColumn').prepend(updateBox);
-		$('div#middleColumn').append(displayBox);
-		$('div#storeColumn').click(storeClickCallback);
-		$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot-css.js');
+
+		$.getScript('https://raw.githack.com/apottere/DripBot/master/dripBot-css.js');
 		getVersion();
-		updateTitleText();
-		toggleStopButton(started);
-		toggleAutoBuyButton(autoBuy.obj);
 		updateClickInterval();
-		toggleClickButton();
 		clickCup();
+
 		// Emergency clicks, sometimes game stalls.
-		setTimeout(function() { clickCup(); }, 2000);
-		setTimeout(function() { clickCup(); }, 5000);
-		setTimeout(function() { start(); }, 500);
+		new TimeoutMod(function() { clickCup(); }, 2000);
+		new TimeoutMod(function() { clickCup(); }, 5000);
+		new TimeoutMod(function() { start(); }, 500);
 
 		$('li#clicks a').click();
-		clickButton.click(incrementCPS);
 
 		if(clicking.obj) {
 			smartChainClick();
@@ -900,7 +1000,146 @@ $dripBot = (function($, oldDripBot, isPro) {
 				localStorage.removeItem(e);
 			} catch(ignore) {}
 		})
+		$dripBot = null;
 	}
+
+	// Mods
+	var saveButton = new DOMMod(
+		'div#globalInfo h3',
+		true,
+		'#save-game',
+		'<button id="save-game" class="btn btn-success btn-lg" href="#" onclick="return false">Save Game</button>',
+		{
+			"margin-left": "20px"
+		}
+	);
+
+	var displayBox = new DOMMod(
+		'div#middleColumn',
+		true,
+		'#dripbot',
+		'<div id="dripbot"><img id="dripbot-logo" src="https://raw.githack.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>',
+		{"text-align": "left"}
+	);
+
+	var updateBox = new DOMMod(
+		'div#middleColumn',
+		false,
+		'#dripbot-update',
+		'<div id="dripbot-update" style="display: none;"><h1>DripBot has been updated.</h1><p>DripBot will automatically update in 5 seconds...</p></div>',
+		{
+			"background-color": "#47a447",
+			"padding": "10px"
+		}
+	);
+
+	var chartTab = new DOMMod(
+		'#dripChartTab',
+		true,
+		'#clicks',
+		'<li id="clicks"><a href="#clickTab" data-toggle="tab">Clicks</a></li>'
+	);
+
+	var tabContent = new DOMMod(
+		'div#globalInfo div.row div.tab-content',
+		true,
+		'#clickTab',
+		'<div id="clickTab" class="tab-pane"></div>'
+	);
+
+	var autoBuyButton = new ToggleButtonMod(
+		'#dripbot ul li#auto-buy',
+		true,
+		'toggle-auto-buy',
+		autoBuy,
+		function() { startAutoBuy(); },
+		function() { stopAutoBuy(); }
+	);
+
+	var clickToggleButton = new ToggleButtonMod(
+		'#dripbot ul li#click-interval',
+		true,
+		'toggle-dripbot-click',
+		clicking,
+		startClicking,
+		stopClicking
+	);
+
+	new CSSMod('div#upgrades', {"height":"auto"}, {"height": "76px"});
+
+	new ClickMod(
+		'div#storeColumn',
+		storeClickCallback
+	);
+
+	new ClickMod(
+		saveButton.elem,
+		save
+	);
+
+	new ClickMod(
+		clickButton,
+		incrementCPS
+	);
+
+	var gameLoop = new IntervalMod(function() {}, 500, true);
+	var errorCheck = new IntervalMod(function() { checkForError(); }, 2000);
+	var checkVersion = new IntervalMod(function() { getVersion(); }, 60000);
+	var CPSTick = new IntervalMod(tickCPS, 1000, true);
+
+	var clicker = new TimeoutMod(smartChainClick, 100, true);
+	var versionUpdate = new TimeoutMod(
+		function() {
+			$.getScript('https://raw.githack.com/apottere/DripBot/master/dripBot.js');
+		},
+		5000,
+		true
+	);
+	var highlightTopThing = new TimeoutMod(
+		function() {
+			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+		},
+		200,
+		true
+	);
+
+	var canBuyTime = new TimeoutMod(
+		function() { canBuy = true; },
+		800,
+		true
+	);
+
+	new APIMod(
+		popManager,
+		'newPop',
+		function(e, t, a) {
+			if(showPops || (e.indexOf('addMem') == -1 && e != 'chartContainer')) {
+				if(e === 'chartContainer' && $('div#clickTab').is(':visible')) {
+					return
+				}
+				popManager.oldNewPop(e,t,a);
+			}
+		}
+	);
+
+	new APIMod(
+		document,
+		'hasFocus',
+		function() { return true; }
+	);
+
+	new APIMod(
+		AnonymousUserManager,
+		'canDrip',
+		function() { return true; }
+	);
+
+	new APIMod(
+		LeaderBoardUI,
+		'createLeaderboardTable',
+		updateLeaderBoard
+	);
+
 
 	init();
 
@@ -908,12 +1147,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
-
-		startClicking: startClicking,
-		stopClicking: stopClicking,
-
-		stopAutoBuy: stopAutoBuy,
-		startAutoBuy: startAutoBuy,
 
 		save: save,
 		stop: stop,
