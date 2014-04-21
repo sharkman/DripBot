@@ -1,4 +1,4 @@
-DripBot v2.0
+DripBot v2.6
 ============
 
 Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimally and automatically.
@@ -12,11 +12,11 @@ Get the [Google Chrome extension](https://chrome.google.com/webstore/detail/drip
 
 *or*
 
-Use a bookmark to easily start DripBot.  Create a new bookmark with `javascript:(function(){$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');}());` as the *url*.  Then just head over to [dripstat](http://dripstat.com/game), and once the page loads click your bookmark.
+Use a bookmark to easily start DripBot.  Create a new bookmark with `javascript:(function(){$.getScript('https://apottere.github.io/DripBot/dripBot.js');}());` as the *url*.  Then just head over to [dripstat](http://dripstat.com/game), and once the page loads click your bookmark.
 
 *or*
 
-After loading dripstat, paste the following into your browser's console and press Enter: `$.getScript('https://raw.github.com/apottere/DripBot/master/dripBot.js');`
+After loading dripstat, paste the following into your browser's console and press Enter: `$.getScript('https://apottere.github.io/DripBot/dripBot.js');`
 
 For more information on browser consoles, see <http://webmasters.stackexchange.com/questions/8525/how-to-open-the-javascript-console-in-different-browsers> (YMMV).
 
