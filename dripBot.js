@@ -950,7 +950,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 		$('div#upgrades').children('div').css({"background-color":""});
 
-		$('ul#dripChartTab').children().first().children('a').click();
+		$('ul#dripChartTabs').children().first().children('a').click();
 	}
 
 	var start = function() {
