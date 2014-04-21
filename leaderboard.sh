@@ -17,24 +17,24 @@ main() {
 	name=$reference
 	line=$(getThisName "$name")
 	echo $line
-	list="$list\n"$(tr '&' ' ' <<< "$line")
+	#list="$list\n"$(tr '&' ' ' <<< "$line")
 
 	while [[ $rank -ne 1 ]]; do
 
 		line=$(getNextName "$name")
 		echo $line
-		list="$list\n"$(tr '&' ' ' <<< "$line")
+		#list="$list\n"$(tr '&' ' ' <<< "$line")
 		aline=( $line )
 		name=${aline[0]}
 		score=${aline[1]}
 		rank=${aline[2]}
 	done
 	
-	echo -e "$list"
+	#echo -e "$list"
 }
 
 ctrl_c() {
-	echo -e "$list"
+	#echo -e "$list"
 	exit 1
 }
 
