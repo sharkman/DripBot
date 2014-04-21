@@ -2,6 +2,8 @@ Highcharts.setOptions({colors:["#DDDF0D","#7798BF","#55BF3B","#DF5353","#aaeeee"
 
 $dripBot = (function($, oldDripBot, isPro) {
 
+	var host = 'https://apottere.github.io/DripBot/';
+
 	if(oldDripBot instanceof Object) {
 		console.log("Stopping old DripBot and starting a new one.");
 		oldDripBot.stop();
@@ -405,7 +407,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var getVersion = function() {
-		$.getScript('https://raw.githack.com/apottere/DripBot/master/version.js', versionCallback);
+		$.getScript(host + 'version.js', versionCallback);
 	}
 
 	var getTopThing = function() {
@@ -975,7 +977,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 		getVersion();
 
-		$.getScript('https://raw.githack.com/apottere/DripBot/master/dripBot-css.js');
+		$.getScript(host + 'dripBot-css.js');
 		getVersion();
 		updateClickInterval();
 		clickCup();
@@ -1018,7 +1020,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'div#middleColumn',
 		true,
 		'#dripbot',
-		'<div id="dripbot"><img id="dripbot-logo" src="https://raw.githack.com/apottere/DripBot/master/dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>',
+		'<div id="dripbot"><img id="dripbot-logo" src="' + host + 'dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>',
 		{"text-align": "left"}
 	);
 
@@ -1090,7 +1092,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var clicker = new TimeoutMod(smartChainClick, 100, true);
 	var versionUpdate = new TimeoutMod(
 		function() {
-			$.getScript('https://raw.githack.com/apottere/DripBot/master/dripBot.js');
+			$.getScript(host + 'dripBot.js');
 		},
 		5000,
 		true
