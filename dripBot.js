@@ -1036,7 +1036,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	);
 
 	var chartTab = new DOMMod(
-		'#dripChartTab',
+		'#dripChartTabs',
 		true,
 		'#clicks',
 		'<li id="clicks"><a href="#clickTab" data-toggle="tab">Clicks</a></li>'
