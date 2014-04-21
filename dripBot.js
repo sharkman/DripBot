@@ -342,12 +342,15 @@ $dripBot = (function($, oldDripBot, isPro) {
 		    },
 		    series: [{
 		        name: 'Actual',
+		        zIndex: 2,
 		        data: []
 		    }, {
 		        name: 'Short Running Average',
+		        zIndex: 3,
 		        data: []
 		    }, {
 		    	name: 'Long Running Average',
+		        zIndex: 1,
 		    	data: []
 		    }]
 		});
