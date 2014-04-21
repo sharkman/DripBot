@@ -1,6 +1,6 @@
 // inject the main script from the latest github source
 var s = document.createElement('script');
-s.src = 'https://raw.githack.com/apottere/DripBot/master/dripBot.js';
+s.src = 'https://apottere.github.io/DripBot/dripBot.js';
 (document.head||document.documentElement).appendChild(s);
 s.onload = function() {
     s.parentNode.removeChild(s);
