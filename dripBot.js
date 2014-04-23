@@ -309,7 +309,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 		        renderTo: "clickTab",
 		        animation: Highcharts.svg, // don't animate in old IE
 		        marginRight: 10,
-		        width: 516,
 		        animation: false
 		    },
 		    title: {
