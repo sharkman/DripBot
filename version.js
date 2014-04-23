@@ -1,1 +1,1 @@
-window.dsbversion = '2.7';
+window.dsbversion = '2.7.1';
