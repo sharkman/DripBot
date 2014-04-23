@@ -769,6 +769,17 @@ $dripBot = (function($, oldDripBot, isPro) {
 		return showPops;
 	}
 
+	var refreshJvms = function() {
+		$.ajax({
+			type: "POST",
+			url: GAME_URL + "jvmdata",
+			success: function(e) {
+                uiElemManager.dripJVMContent.update(e)
+				popManager.oldNewPop('refreshJvms', 'Refreshed', 0);
+	        }
+	    });
+	}
+
 	var stage0 = function() {
 		// noop for now.
 	};
@@ -1052,6 +1063,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'<div id="clickTab" class="tab-pane"></div>'
 	);
 
+	var refreshJvmsButton = new DOMMod(
+		'#dripJVMGrid',
+		true,
+		'#refreshJvms',
+		'<button id="refreshJvms" class="btn btn-success">Refresh</button>'
+	);
+
 	var autoBuyButton = new ToggleButtonMod(
 		'#dripbot ul li#auto-buy',
 		true,
@@ -1085,6 +1103,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 	new ClickMod(
 		clickButton,
 		incrementCPS
+	);
+
+	new ClickMod(
+		'#refreshJvms',
+		refreshJvms
 	);
 
 	var gameLoop = new IntervalMod(function() {}, 500, true);
@@ -1152,6 +1175,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
+		refreshJvms: refreshJvms,
 
 		save: save,
 		stop: stop,
