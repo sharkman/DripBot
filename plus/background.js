@@ -72,6 +72,10 @@ var test = function(name) {
 	});
 };
 
+var listJvms = function() {
+	return jvms.slice(0);
+}
+
 var refreshApps = function() {
 	jvms.forEach(function(jvm) {
 		console.log('Pinging ' + jvm.name)

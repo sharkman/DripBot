@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DripBot's Popup</title>
+    <style>
+      body {
+        min-width: 500px;
+        overflow-x: hidden;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      }
+
+      .content {
+        margin: 20px;
+      }
+
+      img {
+        margin: 5px;
+        border: 2px solid black;
+        vertical-align: middle;
+        width: 75px;
+        height: 75px;
+      }
+    </style>
+
+    <!--
+      - JavaScript and HTML must be in separate files: see our Content Security
+      - Policy documentation[1] for details and explanation.
+      -
+      - [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html
+     -->
+    <script src="jquery.min.js"></script>
+    <script src="knockout.min.js"></script>
+    <link href="/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="app.js"></script>
+  </head>
+  <body>
+     <div class="container">
+        <div class="content">     
+          <h3>JVMs</h3>
+          <ul data-bind="foreach: jvms">
+            <li data-bind="text: name"></li>
+          </ul>
+          <hr>
+          <input id="newJvmName" type="text" data-bind="value: jvmName" />
+          <button id="test" class="btn btn-success" data-bind="click: createNewJvm">Test</button>
+        </div>
+    </div>
+  </body>
+</html>

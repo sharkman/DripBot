@@ -1,34 +1,40 @@
 {
-  "name": "DripBot Plus",
-  "version": "2.0",
-  "manifest_version": 2,
-  "permissions": [
-  	"http://dripstat.com/",
-    "https://dripstat.com/",
-    "http://datacollector.dripstat.com/",
-    "https://apmgui.dripstat.com/",
-    "storage"
-  ],
+	"name": "DripBot Plus",
+	"version": "2.0",
+	"manifest_version": 2,
+	"permissions": [
+		"http://dripstat.com/",
+	"https://dripstat.com/",
+	"http://datacollector.dripstat.com/",
+	"https://apmgui.dripstat.com/",
+	"storage"
+		],
 
-   "content_scripts": [
-    {
-      "matches": ["https://dripstat.com/game/*"],
-      "js": ["contentscript.js"]
-    }
-  ],
+	"content_scripts": [
+		{
+			"matches": ["https://dripstat.com/game/*"],
+			"js": ["contentscript.js"]
+		}
+	],
 
-  "browser_action": {
-    "default_icon": "drip_48.png",
-    "default_popup": "popup.html"
-  },
+	"sandbox": {
+		"pages": ["app.html"]
+	},
 
-  "background": {
-    "scripts": ["background.js", "jquery.min.js"]
-  },
+	"browser_action": {
+		"default_icon": "drip_48.png",
+		"default_popup": "popup.html"
+	},
 
- "icons": { "16": "drip_16.png",
-            "48": "drip_48.png",
-           "128": "drip_128.png" },
+	"background": {
+		"scripts": ["jquery.min.js", "background.js"]
+	},
 
-  "web_accessible_resources": ["dripBot.js"]
+	"icons": {
+		"16": "drip_16.png",
+		"48": "drip_48.png",
+		"128": "drip_128.png"
+	},
+
+	"web_accessible_resources": ["dripBot.js"]
 }
