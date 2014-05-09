@@ -1033,12 +1033,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var voidDatamonsterConfig = function(number, state) {
-		$('#DM_Option_' + number).prop('enabled', state);
+		$('#DM_Option_' + number).prop('disabled', state);
 	}
 
 	var configDatamonster = function() {
 		for(var i = 0; i <= 4; i++) {
-			clickDatamonsterConfig(i, true);k
+			clickDatamonsterConfig(i, true);
 		}
 	}
 
@@ -1167,10 +1167,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 		true
 	);
 
-	var datamonster = new TimeoutMod(
+	var datamonster = new IntervalMod(
 		function() {
-			if(!datamonsterLoaded) {
-				$.getScript('https://apottere.github.io/Datamonster/datamonster.js');
+			if(!datamonsterRequested) {
+				if(!datamonsterLoadSuccess()) {
+					$.getScript('https://apottere.github.io/Datamonster/datamonster.js');
+				}
 				datamonsterRequested = true;
 			}
 
@@ -1185,7 +1187,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 			}
 		},
 		1000,
-		true
+		false
 	);
 
 	new APIMod(
