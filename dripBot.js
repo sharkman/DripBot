@@ -1037,13 +1037,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var configDatamonster = function() {
-		for(var i = 0; i <= 4, i++) {
-			clickDatamonsterConfig(i, true);
+		for(var i = 0; i <= 4; i++) {
+			clickDatamonsterConfig(i, true);k
 		}
 	}
 
 	var configDatamonsterCritical = function() {
-		for(var i = 5; i <= 6, i++) {
+		for(var i = 5; i <= 6; i++) {
 			clickDatamonsterConfig(i, false);
 			voidDatamonsterConfig(i, true);
 		}
