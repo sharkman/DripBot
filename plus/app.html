@@ -35,12 +35,20 @@
   </head>
   <body>
      <div class="container">
-        <div class="content">     
+        <div class="content">
+          <div data-bind="visible: userInfo().user">
+            <div><small>Logged in as: </small><span data-bind="text: userInfo().user"></span></div>
+            <div><small>API key: </small><span data-bind="text: userInfo().key"></span></div>
+          </div>
+          <div data-bind="visible: !userInfo().user">
+            Not logged in.
+          </div>
+          <hr />
           <h3>JVMs</h3>
           <ul data-bind="foreach: jvms">
             <li data-bind="text: name"></li>
           </ul>
-          <hr>
+          <hr />
           <input id="newJvmName" type="text" data-bind="value: jvmName" />
           <button id="test" class="btn btn-success" data-bind="click: createNewJvm">Test</button>
         </div>

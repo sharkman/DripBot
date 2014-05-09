@@ -1,26 +1,46 @@
 var jvms = [];
 var apiKey = null;
 
+var getUserInfo = function() {
+	var info = {};
+	$.ajax('https://apmgui.dripstat.com/rest/accountinfo', {
+		type: 'GET',
+		async: false,
+		headers: {
+			'Accept': 'application/json'
+		},
+
+		success: function(resp) {
+			info['key'] = resp.licenseKey;
+		}
+	});
+
+	$.ajax('https://apmgui.dripstat.com/rest/l4/game/userdata', {
+		type: 'POST',
+		async: false,
+		headers: {
+			'Accept': 'application/json'
+		},
+
+		success: function(resp) {
+			info['id'] = resp.id;
+			info['user'] = resp.user;
+		}
+	});
+
+	if(info.key && info.id) {
+		return info;
+	}
+}
+
 var test = function(name) {
 	if(!name) {
-		return;
+		return 'No name given.';
 	}
 
-	if(!apiKey) {
-		$.ajax('https://apmgui.dripstat.com/rest/accountinfo', {
-			type: 'GET',
-			async: false,
-			headers: {
-				'Accept': 'application/json'
-			},
+	var userInfo = getUserInfo();
 
-			success: function(resp) {
-				apiKey = resp.licenseKey;
-			}
-		});
-	}
-
-	if(!apiKey) {
+	if(!userInfo) {
 		console.log("Not logged in, aborting.");
 	}
 
@@ -31,7 +51,7 @@ var test = function(name) {
 		dataType: 'json',
 
 		headers: {
-			'X-License-Key': apiKey,
+			'X-License-Key': userInfo.key,
 			'X-App-Name': name,
 			'Accept': 'application/json',
 	        'Content-Type': 'application/json' 
@@ -60,7 +80,8 @@ var test = function(name) {
 			console.log("Pushing new app.");
 			jvms.push({
 				name: name,
-				auth: resp.authtoken
+				auth: resp.authtoken,
+				user: userInfo.id
 			});
 
 			refreshApps();

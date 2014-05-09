@@ -12,6 +12,7 @@ function AppViewModel() {
 
 	this.jvmName = ko.observable('name');
 	this.jvms = ko.observable([]);
+	this.userInfo = ko.observable({});
 
 	this.createNewJvm = function() {
 		var name = this.jvmName();
@@ -20,11 +21,21 @@ function AppViewModel() {
 	}
 
 	this.refreshGui = function() {
+		this.callBackground('getUserInfo', [], 'displayUserInfo');
 		this.callBackground('listJvms', [], 'displayJvms');
+	}
+
+	this.displayUserInfo = function(info) {
+		if(info) {
+			this.userInfo(info);
+		}
 	}
 
 	this.displayJvms = function(jvms) {
 		this.jvms(jvms);
+	}
+
+	this.getLoggedInUser = function(userInfo) {
 	}
 }
 

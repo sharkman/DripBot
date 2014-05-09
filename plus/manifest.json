@@ -4,11 +4,11 @@
 	"manifest_version": 2,
 	"permissions": [
 		"http://dripstat.com/",
-	"https://dripstat.com/",
-	"http://datacollector.dripstat.com/",
-	"https://apmgui.dripstat.com/",
-	"storage"
-		],
+		"https://dripstat.com/",
+		"http://datacollector.dripstat.com/",
+		"https://apmgui.dripstat.com/",
+		"storage"
+	],
 
 	"content_scripts": [
 		{
