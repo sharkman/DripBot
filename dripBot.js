@@ -224,7 +224,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 	benevolentLeader = false,
 	showPops = true,
 	MINUTE = 60 * 1000,
-	topThing = null;
+	topThing = null,
+	datamonsterLoaded = false,
+	datamonsterRequested = false,
+	datamonsterConfigured = false;
 
 	var beautify = function(e) {
 		return NumUtils.byteConvert(e, 3);
@@ -1018,6 +1021,34 @@ $dripBot = (function($, oldDripBot, isPro) {
 		$dripBot = null;
 	}
 
+	var datamonsterLoadSuccess = function() {
+		if(!datamonsterLoaded) {
+			datamonsterLoaded = !! $('#DM_Config').length;
+		}
+		return  datamonsterLoaded;
+	}
+
+	var clickDatamonsterConfig = function(number, state) {
+		$('#DM_Option_' + number).prop('checked', state);
+	}
+
+	var voidDatamonsterConfig = function(number, state) {
+		$('#DM_Option_' + number).prop('enabled', state);
+	}
+
+	var configDatamonster = function() {
+		for(var i = 0; i <= 4, i++) {
+			clickDatamonsterConfig(i, true);
+		}
+	}
+
+	var configDatamonsterCritical = function() {
+		for(var i = 5; i <= 6, i++) {
+			clickDatamonsterConfig(i, false);
+			voidDatamonsterConfig(i, true);
+		}
+	}
+
 	// Mods
 	var saveButton = new DOMMod(
 		'div#globalInfo h3',
@@ -1133,6 +1164,27 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var canBuyTime = new TimeoutMod(
 		function() { canBuy = true; },
 		800,
+		true
+	);
+
+	var datamonster = new TimeoutMod(
+		function() {
+			if(!datamonsterLoaded) {
+				$.getScript('https://apottere.github.io/Datamonster/datamonster.js');
+				datamonsterRequested = true;
+			}
+
+			if(datamonsterLoadSuccess()) {
+				if(!datamonsterConfigured) {
+					configDatamonster();
+					configDatamonsterCritical();
+					datamonsterConfigured = true;
+				} else {
+					configDatamonsterCritical();
+				}
+			}
+		},
+		1000,
 		true
 	);
 
