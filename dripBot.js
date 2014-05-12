@@ -1037,16 +1037,16 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var configDatamonster = function() {
-		for(var i = 0; i <= 4; i++) {
+		[1, 2, 3, 4, 7].forEach(function(i) {
 			clickDatamonsterConfig(i, true);
-		}
+		});
 	}
 
 	var configDatamonsterCritical = function() {
-		for(var i = 5; i <= 6; i++) {
+		[5, 6].forEach(function(i) {
 			clickDatamonsterConfig(i, false);
 			voidDatamonsterConfig(i, true);
-		}
+		});
 	}
 
 	// Mods
