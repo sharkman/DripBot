@@ -217,7 +217,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	CPSPid = -1,
 	CPSChart = null,
 	CPSChartLength = 30,
-	BPSThreshold = 7 * 1000 * 1000,
 	powerups = {},
 	timeOfLeaderChange = 0,
 	currentLeader = '',
@@ -451,6 +450,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var clicking = new Save('clicking', false);
 	var clicksLeft = new Save('clicksLeft', 2000);
 	var autoBuy = new Save('autoBuy', false);
+	var stage3threshold = new Save('stage3threshold', 7 * 1000 * 1000);
 
 	function Rc4Random(seed) {
 		var keySchedule = [];
@@ -696,7 +696,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var atBPSCap = function() {
-		return getBPS() >= BPSThreshold;
+		return getBPS() >= stage3threshold.obj;
 	}
 
 	var getMyName = function() {
@@ -747,9 +747,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var setBPSThreshold = function(num) {
 		if(num && num > 0) {
-			BPSThreshold = num * 1000 * 1000;
+			stage3threshold.set(num * 1000 * 1000);
 		}
-		return BPSThreshold;
+		return stage3threshold.obj;
 	}
 
 	var stopClicking = function() {
@@ -1064,7 +1064,20 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'div#middleColumn',
 		true,
 		'#dripbot',
-		'<div id="dripbot"><img id="dripbot-logo" src="' + host + 'dripico.png" /><h3 id="dripbot-title"></h3><ul><li id="next-purchase"><p>Next Purchase: </p></li><li id="auto-buy"><p>Auto buy: </p></li><li id="click-interval"><p></p></li></ul></div>',
+		'<div id="dripbot">
+			<img id="dripbot-logo" src="' + host + 'dripico.png" />
+			<h3 id="dripbot-title"></h3>
+			<ul>
+				<li id="next-purchase"><p>Next Purchase: </p></li>
+				<li id="auto-buy"><p>Auto buy: </p></li>
+				<li id="click-interval"><p></p></li>
+				<li id="bsp-threshold">
+					<p>Set BPS Threshold for stage 3 (currently <span id="bps-threshold-current"></span>): </p>
+					<input id="set-bps-threshold" type="text" />
+					<button id="set-bps-threshold-button" class="btn btn-success">Set</button>
+				</li>
+			</ul>
+		</div>',
 		{"text-align": "left"}
 	);
 
