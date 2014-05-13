@@ -226,7 +226,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	topThing = null,
 	datamonsterLoaded = false,
 	datamonsterRequested = false,
-	datamonsterConfigured = false;
+	datamonsterConfigured = false,
+	stage3counter = 0;
 
 	var beautify = function(e) {
 		return NumUtils.byteConvert(e, 3);
@@ -749,6 +750,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(num && num > 0) {
 			stage3threshold.set(num * 1000 * 1000);
 		}
+		displayBpsThreshold();
 		return stage3threshold.obj;
 	}
 
@@ -844,6 +846,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 			return;
 		}
 
+		if(stage3counter < 60 * 2) {
+			stage3counter++;
+			return;
+		} else {
+			stage3counter = 0;
+		}
+
 		var leaderName = getLeader();
 		if(!currentLeader) {
 			currentLeader = getMyName();
@@ -923,7 +932,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		{
 			name: "3 (Win)",
 			func: stage3,
-			interval: 2 * MINUTE
+			interval: 1000
 		}
 	];
 
@@ -984,6 +993,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 		getNewTopThing();
 		createCPSChart();
+		displayBpsThreshold();
 	}
 
 	var init = function() {
@@ -1049,6 +1059,21 @@ $dripBot = (function($, oldDripBot, isPro) {
 		});
 	}
 
+	var displayBpsThreshold = function() {
+		$('#bps-threshold-current').text(stage3threshold.obj / (1000 * 1000));
+	}
+
+	var updateBpsThreshold = function() {
+		var textbox = $('#set-bps-threshold');
+		var input = textbox.val();
+		textbox.val('');
+
+		if(!isNaN(input)) {
+			stage3threshold.set(Number(input) * 1000 * 1000);
+			displayBpsThreshold();
+		}
+	}
+
 	// Mods
 	var saveButton = new DOMMod(
 		'div#globalInfo h3',
@@ -1064,19 +1089,20 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'div#middleColumn',
 		true,
 		'#dripbot',
-		'<div id="dripbot">
-			<img id="dripbot-logo" src="' + host + 'dripico.png" />
-			<h3 id="dripbot-title"></h3>
-			<ul>
-				<li id="next-purchase"><p>Next Purchase: </p></li>
-				<li id="auto-buy"><p>Auto buy: </p></li>
-				<li id="click-interval"><p></p></li>
-				<li id="bsp-threshold">
-					<p>Set BPS Threshold for stage 3 (currently <span id="bps-threshold-current"></span>): </p>
-					<input id="set-bps-threshold" type="text" />
-					<button id="set-bps-threshold-button" class="btn btn-success">Set</button>
-				</li>
-			</ul>
+		'<div id="dripbot">\
+			<img id="dripbot-logo" src="' + host + 'dripico.png" />\
+			<h3 id="dripbot-title"></h3>\
+			<ul>\
+				<li id="next-purchase"><p>Next Purchase: </p></li>\
+				<li id="auto-buy"><p>Auto buy: </p></li>\
+				<li id="click-interval"><p></p></li>\
+				<li id="bsp-threshold">\
+					<span>Set BPS Threshold for stage 3 (currently <span id="bps-threshold-current"></span> MB/s): </span>\
+					<input id="set-bps-threshold" type="text" />\
+					<span>MB/s</span>\
+					<button id="set-bps-threshold-button" class="btn btn-success">Set</button>\
+				</li>\
+			</ul>\
 		</div>',
 		{"text-align": "left"}
 	);
@@ -1136,6 +1162,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 	new ClickMod(
 		'div#storeColumn',
 		storeClickCallback
+	);
+
+	new ClickMod(
+		'#set-bps-threshold-button',
+		updateBpsThreshold
 	);
 
 	new ClickMod(
@@ -1238,7 +1269,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	init();
 
 	return {
-		setBPSThreshold: setBPSThreshold,
 		setBenevolentLeader: setBenevolentLeader,
 		setShowPops: setShowPops,
 		refreshJvms: refreshJvms,
