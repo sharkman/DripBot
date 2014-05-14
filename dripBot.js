@@ -1023,15 +1023,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var purge = function() {
 		stop();
-		setTimeout(function() {
-			for ( var i = 0, len = localStorage.length; i < len; ++i ) {
-				if(/^dsb\./.test(localStorage.key(i))) {
-					try {
-						localStorage.removeItem(localStorage.key(i));
-					} catch(ignore) {}
-				}
+		var toRemove = [];
+		for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+			if(/^dsb\./.test(localStorage.key(i))) {
+				toRemove.push(localStorage.key(i));
 			}
-		}, 500);
+		}
+
+		toRemove.forEach(function(e) {
+			try {
+				localStorage.removeItem(e);
+			} catch(ignore) {}
+		});
 
 		$dripBot = null;
 	}
