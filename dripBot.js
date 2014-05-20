@@ -1055,7 +1055,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var configDatamonster = function() {
-		[1, 2, 3, 4, 7].forEach(function(i) {
+		[1, 2, 3, 4, 7, 8, 9].forEach(function(i) {
 			clickDatamonsterConfig(i, true);
 		});
 	}
