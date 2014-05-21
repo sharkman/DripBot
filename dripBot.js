@@ -227,7 +227,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	datamonsterLoaded = false,
 	datamonsterRequested = false,
 	datamonsterConfigured = false,
-	stage3counter = 0;
+	stage3counter = 0,
+	clickCountDivisor = 1;
 
 	var beautify = function(e) {
 		return NumUtils.byteConvert(e, 3);
@@ -533,12 +534,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 		clicker.timeout = getNewClickTimeout();
 
 		if(clicker.timeout < 60000) {
-			$('#click-interval p').text("Next click in: " + clicker.timeout + 'ms.  Clicks till next break: ' + clicksLeft.obj);
+			$('#click-interval-message').text("Clicks Left: " + clicksLeft.obj);
 		} else {
 			var minutes = Math.floor(clicker.timeout / MINUTE);
 			var seconds = Math.floor((clicker.timeout - minutes * MINUTE) / 1000);
-			$('#click-interval p').text("Next click in: " + minutes + ' minutes, ' + seconds + ' seconds.  Clicks till next break: ' + clicksLeft.obj);
+			$('#click-interval-message').text("Sleeping for: " + minutes + ':' + seconds);
 		}
+
+		$('#click-interval div.progress-bar-success').css('width', (100 - (clicksLeft.obj / clickCountDivisor) * 100) + '%');
 	}
 
 	function OTB(o, upgrade) {
@@ -950,6 +953,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var getNewClicksTillBreak = function() {
 		clicksLeft.set(Math.floor(rc4Rand.getRandomNumber() * 500 + 2200));
+		clickCountDivisor = clicksLeft.obj;
 	}
 
 	var smartChainClick = function() {
@@ -1102,8 +1106,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 			<h3 id="dripbot-title"></h3>\
 			<ul>\
 				<li id="next-purchase"><p>Next Purchase: </p></li>\
-				<li id="auto-buy"><p>Auto buy: </p></li>\
-				<li id="click-interval"><p></p></li>\
+				<li id="auto-buy"><p>Auto buy</p></li>\
+				<li id="click-interval">\
+					<div class="progress" style="height: 20px; width: 400px; display: inline-block; margin-top: 5px; vertical-align: middle;">\
+						<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;" />\
+						<span id="click-interval-message" class="progressText"></span>\
+					</div>\
+				</li>\
 				<li id="bsp-threshold">\
 					<span>Set BPS Threshold for stage 3 (currently <span id="bps-threshold-current"></span> MB/s): </span>\
 					<input id="set-bps-threshold" type="text" />\
@@ -1149,20 +1158,22 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var autoBuyButton = new ToggleButtonMod(
 		'#dripbot ul li#auto-buy',
-		true,
+		false,
 		'toggle-auto-buy',
 		autoBuy,
 		function() { startAutoBuy(); },
-		function() { stopAutoBuy(); }
+		function() { stopAutoBuy(); },
+		{'margin-right': '10px'}
 	);
 
 	var clickToggleButton = new ToggleButtonMod(
 		'#dripbot ul li#click-interval',
-		true,
+		false,
 		'toggle-dripbot-click',
 		clicking,
 		startClicking,
-		stopClicking
+		stopClicking,
+		{'margin-right': '10px'}
 	);
 
 	new CSSMod('div#upgrades', {"height":"auto"}, {"height": "76px"});
@@ -1198,6 +1209,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var CPSTick = new IntervalMod(tickCPS, 1000, true);
 
 	var clicker = new TimeoutMod(smartChainClick, 100, true);
+	clickCountDivisor = clicksLeft.obj;
+
 	var versionUpdate = new TimeoutMod(
 		function() {
 			$.getScript(host + 'dripBot.js');
