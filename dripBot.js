@@ -228,7 +228,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 	datamonsterRequested = false,
 	datamonsterConfigured = false,
 	stage3counter = 0,
-	clickCountDivisor = 1;
+	clickCountDivisor = 1,
+	excludedPowerups = ["Spring Framework"],
+	excludedUpgrades = [];
 
 	var beautify = function(e) {
 		return NumUtils.byteConvert(e, 3);
@@ -584,11 +586,15 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var getOTBList = function() {
 		var powerupsAndUpgrades = []
 		localStats.powerUps.slice(0).forEach(function(e) {
-			powerupsAndUpgrades.push(new OTB(e, false));
+			if($.inArray(e.name, excludedPowerups) < 0) {
+				powerupsAndUpgrades.push(new OTB(e, false));
+			}
 			if(e.upgrades.length) {
 				e.upgrades.forEach(function(u) {
 					if((!u._purchased) && u._unlocked) {
-						powerupsAndUpgrades.push(new OTB(u, true));
+						if($.inArray(u.name, excludedUpgrades) < 0) {
+							powerupsAndUpgrades.push(new OTB(u, true));
+						}
 					}
 				});
 			}
