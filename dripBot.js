@@ -660,12 +660,14 @@ $dripBot = (function($, oldDripBot, isPro) {
 		if(!oldTopThing || topThing.item.name !== oldTopThing.item.name) {
 			if(oldTopThing !== null) {
 				oldTopThing.ident.css({'background-color': ''});
+				oldTopThing.ident.tooltip().mouseleave();
 			}
 			updateNextPurchase(topThing);
 			if(topThing.isUpgrade) {
 				highlightTopThing.start();
 			} else {
 				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+				topThing.ident.tooltip().mouseover();
 			}
 		}
 	}
@@ -1227,6 +1229,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var highlightTopThing = new TimeoutMod(
 		function() {
 			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+			topThing.ident.tooltip().mouseover();
 		},
 		200,
 		true
