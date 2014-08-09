@@ -2,7 +2,7 @@ Highcharts.setOptions({colors:["#DDDF0D","#7798BF","#55BF3B","#DF5353","#aaeeee"
 
 $dripBot = (function($, oldDripBot, isPro) {
 
-	var host = 'https://apottere.github.io/DripBot/';
+	var host = 'https://sharkman.github.io/DripBot/';
 
 	if(oldDripBot instanceof Object) {
 		console.log("Stopping old DripBot and starting a new one.");
@@ -229,7 +229,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	datamonsterConfigured = false,
 	stage3counter = 0,
 	clickCountDivisor = 1,
-	excludedPowerups = ["Spring Framework"],
+	excludedPowerups = [],
 	excludedUpgrades = [];
 
 	var beautify = function(e) {
@@ -460,34 +460,34 @@ $dripBot = (function($, oldDripBot, isPro) {
 		var keySchedule = [];
 		var keySchedule_i = 0;
 		var keySchedule_j = 0;
-		
+
 		function init(seed) {
 			for (var i = 0; i < 256; i++)
 				keySchedule[i] = i;
-			
+
 			var j = 0;
 			for (var i = 0; i < 256; i++)
 			{
 				j = (j + keySchedule[i] + seed.charCodeAt(i % seed.length)) % 256;
-				
+
 				var t = keySchedule[i];
 				keySchedule[i] = keySchedule[j];
 				keySchedule[j] = t;
 			}
 		}
 		init(seed);
-		
+
 		function getRandomByte() {
 			keySchedule_i = (keySchedule_i + 1) % 256;
 			keySchedule_j = (keySchedule_j + keySchedule[keySchedule_i]) % 256;
-			
+
 			var t = keySchedule[keySchedule_i];
 			keySchedule[keySchedule_i] = keySchedule[keySchedule_j];
 			keySchedule[keySchedule_j] = t;
-			
+
 			return keySchedule[(keySchedule[keySchedule_i] + keySchedule[keySchedule_j]) % 256];
 		}
-		
+
 		this.getRandomNumber = function() {
 			var number = 0;
 			var multiplier = 1;
@@ -678,7 +678,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var getLeader = function() {
 		return $('div#leaderBoard table tbody').children('tr').first().children('td').eq(1).text();
 	}
-	
+
 	var getClickingBps = function() {
 		return CoffeeCup.calcBytesPerClick() * 20;
 	}
@@ -851,7 +851,7 @@ $dripBot = (function($, oldDripBot, isPro) {
         }
 	};
 
-	var stage3 = function() { 
+	var stage3 = function() {
 		if(!atBPSCap()) {
 			goToStage(2);
 			return;
